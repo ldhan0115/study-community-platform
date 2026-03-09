@@ -75,17 +75,14 @@
 
 # 📊 ERD
 
-- 개념적 모델링
-![ERD](docs/erd/ERD_v1.png)
+## 개념적 모델링
+<img src="docs/erd/ERD_v1.png" width="700" />
 
+## 논리적 모델링
+<img src="docs/erd/ERD_v2.png" width="700" />
 
-- 논리적 모델링
-![ERD](docs/erd/ERD_v2.png)
-
-
-- 물리적 모델링
-![ERD](docs/erd/ERD_v3.png)
-
+## 물리적 모델링
+<img src="docs/erd/ERD_v3.png" width="700" />
 ---
 
 # 🗂 데이터베이스 구조
