@@ -1,0 +1,57 @@
+package com.study.study_community_platform.domain;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+// JPA에서 사용하는 기본 생성자, 외부에서 직접 생성하는 것을 방지
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Member {
+
+    // 회원의 기본 키 (PK)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // DB auto increment 방식 사용
+    @Column(name = "member_id")
+    private Long id;
+
+    // 로그인에 사용하는 아이디 (중복 불가)
+    @Column(nullable = false, unique = true, length = 50)
+    private String loginId;
+
+    // 비밀번호 (실제 서비스에서는 반드시 암호화된 값 저장)
+    @Column(nullable = false, length = 255)
+    private String password;
+
+    // 이메일 (회원 식별 및 알림 등에 사용)
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
+    // 커뮤니티에서 표시되는 닉네임
+    @Column(nullable = false, unique = true, length = 50)
+    private String nickname;
+
+    // 회원 생성 시간
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    // 회원 정보 수정 시간
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    // 회원 정보 삭제 시간
+    // soft delete용 컬럼 (값이 있으면 삭제된 회원)
+    private LocalDateTime deletedAt;
+
+    // 회원 객체 생성 시 사용하는 생성자
+    public Member(String loginId, String password, String email, String nickname) {
+        this.loginId = loginId;
+        this.password = password;
+        this.email = email;
+        this.nickname = nickname;
+    }
+}
