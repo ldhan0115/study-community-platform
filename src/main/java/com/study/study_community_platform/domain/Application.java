@@ -46,7 +46,7 @@ public class Application {
     // REJECTED → 거절
     // CANCELED → 취소
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "application_status", nullable = false)
     private ApplicationStatus status;
 
     // 신청 생성 시간

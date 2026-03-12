@@ -50,7 +50,7 @@ public class Study {
 
     // 모집 상태(OPEN / CLOSED)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "study_status", nullable = false)
     private StudyStatus studyStatus;
 
     // 최초 생성 시간
