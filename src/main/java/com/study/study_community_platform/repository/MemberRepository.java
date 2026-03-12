@@ -29,6 +29,27 @@ public class MemberRepository {
         return Optional.ofNullable(em.find(Member.class, id));
     }
 
+    // loginId 기준 회원 조회
+    public List<Member> findByLoginId(String loginId){
+        return em.createQuery("select m from Member m where m.loginId = :loginId", Member.class)
+                .setParameter("loginId", loginId)
+                .getResultList();
+    }
+
+    // email 기준 회원 조회
+    public List<Member> findByEmail(String email){
+        return em.createQuery("select m from Member m where m.email = :email", Member.class)
+                .setParameter("email", email)
+                .getResultList();
+    }
+
+    // nickname 기준 회원 조회
+    public List<Member> findByNickname(String nickname){
+        return em.createQuery("select m from Member m where m.nickname = :nickname", Member.class)
+                .setParameter("nickname", nickname)
+                .getResultList();
+    }
+
     // 전체 회원 조회
     public List<Member> findAll() {
         return em.createQuery("select m from Member m", Member.class)
