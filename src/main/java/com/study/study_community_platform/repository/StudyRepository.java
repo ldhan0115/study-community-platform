@@ -35,7 +35,7 @@ public class StudyRepository {
     }
 
     // 스터디 삭제
-    public void cancel(Long id){
+    public void delete(Long id){
         Study study = em.find(Study.class, id);
         if (study != null) {
             em.remove(study);

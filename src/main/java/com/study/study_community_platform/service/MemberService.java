@@ -25,7 +25,7 @@ public class MemberService {
     }
 
     // 회원 단건 조회
-    public Member findOne(Long memberId){
+    public Member findMember(Long memberId){
         Optional<Member> byId = memberRepository.findById(memberId);
         return byId.orElse(null); // 해당 회원 없으면 null 반환
     }

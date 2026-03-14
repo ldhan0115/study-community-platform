@@ -64,6 +64,7 @@ public class Study {
     private LocalDateTime deletedAt;
 
     // 스터디 생성 메서드
+    // 스터디 생성 시 필요한 규칙을 엔티티 내부에서 관리
     public static Study createStudy(Member member, String title, String content,
                                     StudyMethod method, String region, int capacity) {
 
@@ -98,5 +99,10 @@ public class Study {
         study.studyStatus = StudyStatus.OPEN;
 
         return study;
+    }
+
+    // 모집 마감 처리
+    public void close(){
+        studyStatus = StudyStatus.CLOSED;
     }
 }
