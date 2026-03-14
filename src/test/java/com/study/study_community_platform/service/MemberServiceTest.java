@@ -24,7 +24,7 @@ class MemberServiceTest {
 
         // when
         Long joinedId = memberService.join(member);
-        Member findMember = memberService.findOne(joinedId);
+        Member findMember = memberService.findMember(joinedId);
 
         // then
         // 회원 가입 후 조회한 회원이 동일한지 검증
