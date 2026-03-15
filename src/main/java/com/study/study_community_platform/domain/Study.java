@@ -63,6 +63,19 @@ public class Study {
     // Soft Delete 용 컬럼
     private LocalDateTime deletedAt;
 
+    // 스터디 객체가 저장되기 직전에 생성/수정 시간을 세팅
+    @PrePersist
+    public void prePersist(){
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 스터디 객체 수정 직전에 수정 시간을 갱신
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt = LocalDateTime.now();
+    }
+
     // 스터디 생성 메서드
     // 스터디 생성 시 필요한 규칙을 엔티티 내부에서 관리
     public static Study createStudy(Member member, String title, String content,
