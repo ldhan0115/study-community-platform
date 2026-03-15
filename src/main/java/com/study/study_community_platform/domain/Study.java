@@ -101,6 +101,33 @@ public class Study {
         return study;
     }
 
+    // 스터디 정보 수정 메서드
+    public void changeStudyInfo(String title, String content,
+                                StudyMethod method, String region, int capacity) {
+
+        // 수정 시에도 생성 때와 동일한 검증 수행
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("스터디 제목은 필수입니다.");
+        }
+
+        if (capacity < 1) {
+            throw new IllegalArgumentException("정원은 1명 이상이어야 합니다.");
+        }
+
+        this.title = title;
+        this.content = content;
+        this.method = method;
+
+        if (method == StudyMethod.ONLINE) {
+            this.region = null;
+        } else {
+            this.region = region;
+        }
+
+        this.capacity = capacity;
+
+    }
+
     // 모집 마감 처리
     public void close(){
         studyStatus = StudyStatus.CLOSED;

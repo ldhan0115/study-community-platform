@@ -21,8 +21,8 @@ public class StudyService {
 
     // 스터디 생성
     @Transactional
-    public Long createStudy(Long memberId, String title, String content,
-                            StudyMethod method, String region, int capacity){
+    public Long registerStudy(Long memberId, String title, String content,
+                              StudyMethod method, String region, int capacity){
 
         // 스터디 작성자 조회
         Member member = memberRepository.findById(memberId)
@@ -48,9 +48,16 @@ public class StudyService {
 
     // 스터디 수정
     @Transactional
-    public void updateStudy(Study study){
-        studyRepository.save(study);
+    public void updateStudy(Long studyId,  String title, String content,
+                            StudyMethod method, String region, int capacity) {
+
+        Study findStudy = studyRepository.findById(studyId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+
+        // 조회한 기존 엔티티의 값만 변경해서 JPA dirty checking으로 반영
+        findStudy.changeStudyInfo(title, content, method, region, capacity);
     }
+
 
     // 스터디 모집 마감 처리
     @Transactional
