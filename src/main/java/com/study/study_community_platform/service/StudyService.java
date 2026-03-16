@@ -19,7 +19,7 @@ public class StudyService {
     private final StudyRepository studyRepository;
     private final MemberRepository memberRepository;
 
-    // 스터디 생성
+    // 스터디 등록
     @Transactional
     public Long registerStudy(Long memberId, String title, String content,
                               StudyMethod method, String region, int capacity){
