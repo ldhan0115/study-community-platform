@@ -56,5 +56,46 @@ public class Application {
     // 신청 정보 수정 시간
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    // 신청 객체가 저장되기 직전에 생성/수정 시간을 세팅
+    @PrePersist
+    public void prePersist(){
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 신청 객체 수정 직전에 수정 시간을 갱신
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 신청 생성 메서드
+    public static Application createApplication(Member member, Study study, String message){
+        Application application = new Application();
+
+        application.member = member;
+        application.study = study;
+        application.message = message;
+        application.status = ApplicationStatus.PENDING;
+
+        return application;
+    }
+
+    // 신청 승인
+    public void approve() {
+        this.status = ApplicationStatus.APPROVED;
+    }
+
+    // 신청 거절
+    public void reject() {
+        this.status = ApplicationStatus.REJECTED;
+    }
+
+    // 신청 취소
+    public void cancel() {
+        this.status = ApplicationStatus.CANCELED;
+    }
+
 }
 
