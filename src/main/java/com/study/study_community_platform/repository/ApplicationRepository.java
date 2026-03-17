@@ -24,6 +24,7 @@ public class ApplicationRepository {
         return Optional.ofNullable(em.find(Application.class, id));
     }
 
+    // 회원 기준 신청 목록 조회
     public List<Application> findByMemberId(Long memberId){
 
         return em.createQuery("select a from Application a where a.member.id = :memberId", Application.class)
