@@ -44,4 +44,31 @@ public class Comment {
 
     // soft delete 처리용 컬럼
     private LocalDateTime deletedAt;
+
+    // 댓글 객체가 저장되기 직전에 생성/수정 시간을 세팅
+    @PrePersist
+    public void prePersist(){
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 댓글 객체 수정 직전에 수정 시간을 갱신
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 댓글 생성 메서드
+    public static Comment createComment(Member member, Post post, String content){
+        Comment comment = new Comment();
+        comment.member = member;
+        comment.post = post;
+        comment.content = content;
+        return comment;
+    }
+
+    // 댓글 내용 수정 메서드
+    public void changeCommentInfo(String content) {
+        this.content = content;
+    }
 }
