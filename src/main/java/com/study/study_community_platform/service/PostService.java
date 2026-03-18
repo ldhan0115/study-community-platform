@@ -40,7 +40,7 @@ public class PostService {
     }
 
     // 특정 회원의 게시물 목록 조회
-    public List<Post> findPostByMemberId(Long memberId) {
+    public List<Post> findPostsByMember(Long memberId) {
         return postRepository.findByMemberId(memberId);
     }
 
