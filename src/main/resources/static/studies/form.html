@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle} ?: 'Study Community Platform'">Study Community Platform</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css}" href="../vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="../css/app.css">
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" th:href="@{/}" href="../index.html">
+      <span class="brand-dot"></span>
+      <span>Study Community Platform</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item"><a class="nav-link" th:href="@{/studies}" href="../studies/index.html">스터디</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/posts}" href="../posts/index.html">커뮤니티</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/applications}" href="../applications/index.html">신청내역</a></li>
+        <li class="nav-item"><a class="btn btn-outline-primary btn-sm" th:href="@{/members/login}" href="../members/login.html">로그인</a></li>
+        <li class="nav-item"><a class="btn btn-primary btn-sm" th:href="@{/members/signup}" href="../members/signup.html">회원가입</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<main class="container py-5">
+  <div class="mb-4">
+    <h1 class="h2 section-title" th:text="${study != null} ? '스터디 수정' : '스터디 개설'">스터디 개설</h1>
+    <p class="text-secondary mb-0">Study 엔티티의 title, content, method, region, capacity 값을 입력받는 폼입니다.</p>
+  </div>
+  <section class="card soft-card"><div class="card-body p-4">
+    <form class="row g-3" th:action="${study != null} ? @{/studies/{id}/edit(id=${study.id})} : @{/studies/new}" action="#" method="post">
+      <div class="col-12"><label class="form-label">제목</label><input class="form-control" type="text" name="title" th:value="${study?.title}" placeholder="예: 백엔드 취업 준비 스터디"></div>
+      <div class="col-12"><label class="form-label">소개</label><textarea class="form-control" name="content" rows="8" placeholder="스터디 목표, 진행 방식, 모집 대상을 작성하세요." th:text="${study?.content}"></textarea></div>
+      <div class="col-md-4"><label class="form-label">진행 방식</label><select class="form-select" name="method"><option value="ONLINE" th:selected="${study?.method?.name() == 'ONLINE'}">온라인</option><option value="OFFLINE" th:selected="${study?.method?.name() == 'OFFLINE'}">오프라인</option></select></div>
+      <div class="col-md-4"><label class="form-label">지역</label><input class="form-control" type="text" name="region" th:value="${study?.region}" placeholder="오프라인일 때만 입력"></div>
+      <div class="col-md-4"><label class="form-label">정원</label><input class="form-control" type="number" min="1" name="capacity" th:value="${study?.capacity}" placeholder="예: 6"></div>
+      <div class="col-12 d-flex gap-2 justify-content-end mt-2">
+        <a class="btn btn-outline-secondary" th:href="@{/studies}" href="../studies/index.html">취소</a>
+        <button class="btn btn-primary" type="submit">저장</button>
+      </div>
+    </form>
+  </div></section>
+</main>
+
+
+<footer class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 border-top pt-4 footer-note">
+    <span>개인 프로젝트 UI 시안 · Spring MVC / Thymeleaf 템플릿 연결용</span>
+    <span>Bootstrap 5.3.8 기반 화면</span>
+  </div>
+</footer>
+
+<script th:src="@{/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js}" src="../vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

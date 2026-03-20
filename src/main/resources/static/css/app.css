@@ -1,0 +1,51 @@
+
+:root {
+  --scp-primary: #0d6efd;
+  --scp-dark: #0f172a;
+  --scp-muted: #64748b;
+  --scp-bg: #f8fafc;
+}
+body {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  min-height: 100vh;
+}
+.navbar-brand .brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--scp-primary);
+  display: inline-block;
+}
+.hero-card {
+  background: radial-gradient(circle at top right, rgba(13,110,253,.15), transparent 28%), #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 1.25rem;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.06);
+}
+.soft-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 .75rem 1.5rem rgba(15, 23, 42, 0.05);
+}
+.section-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.meta-inline {
+  color: var(--scp-muted);
+  font-size: .925rem;
+}
+.empty-state {
+  border: 2px dashed rgba(100, 116, 139, .35);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.6);
+}
+.content-box {
+  min-height: 180px;
+  white-space: pre-wrap;
+}
+.footer-note {
+  color: var(--scp-muted);
+  font-size: .9rem;
+}
+.table td, .table th { vertical-align: middle; }
