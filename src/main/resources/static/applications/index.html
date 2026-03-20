@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle} ?: 'Study Community Platform'">Study Community Platform</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css}" href="../vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="../css/app.css">
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" th:href="@{/}" href="../index.html">
+      <span class="brand-dot"></span>
+      <span>Study Community Platform</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item"><a class="nav-link" th:href="@{/studies}" href="../studies/index.html">스터디</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/posts}" href="../posts/index.html">커뮤니티</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/applications}" href="../applications/index.html">신청내역</a></li>
+        <li class="nav-item"><a class="btn btn-outline-primary btn-sm" th:href="@{/members/login}" href="../members/login.html">로그인</a></li>
+        <li class="nav-item"><a class="btn btn-primary btn-sm" th:href="@{/members/signup}" href="../members/signup.html">회원가입</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<main class="container py-5">
+  <div class="mb-4"><h1 class="h2 section-title mb-1">스터디 신청 내역</h1><p class="text-secondary mb-0">Application 엔티티와 ApplicationStatus 흐름을 확인하기 위한 화면입니다.</p></div>
+  <section class="card soft-card overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light"><tr><th>신청 번호</th><th>스터디</th><th>신청자</th><th>상태</th><th>신청일</th><th></th></tr></thead>
+        <tbody th:if="${applications != null and !#lists.isEmpty(applications)}">
+          <tr th:each="application : ${applications}">
+            <td th:text="${application.id}">1</td>
+            <td th:text="${application.study.title} ?: '백엔드 취업 준비 스터디'">스터디 제목</td>
+            <td th:text="${application.member.nickname} ?: '코딩하는감자'">신청자</td>
+            <td>
+              <span class="badge text-bg-warning" th:if="${application.applicationStatus.name() == 'PENDING'}">대기</span>
+              <span class="badge text-bg-success" th:if="${application.applicationStatus.name() == 'APPROVED'}">승인</span>
+              <span class="badge text-bg-danger" th:if="${application.applicationStatus.name() == 'REJECTED'}">거절</span>
+              <span class="badge text-bg-secondary" th:if="${application.applicationStatus.name() == 'CANCELED'}">취소</span>
+            </td>
+            <td th:text="${#temporals.format(application.createdAt, 'yyyy.MM.dd HH:mm')} ?: '2026.03.20 20:00'">신청일</td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm" th:if="${application.applicationStatus.name() == 'PENDING'}">
+                <form method="post" th:action="@{/applications/{id}/approve(id=${application.id})}" action="#"><button class="btn btn-outline-success" type="submit">승인</button></form>
+                <form method="post" th:action="@{/applications/{id}/reject(id=${application.id})}" action="#"><button class="btn btn-outline-danger" type="submit">거절</button></form>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="p-5 text-center empty-state m-3" th:unless="${applications != null and !#lists.isEmpty(applications)}">
+      <h2 class="h5">신청 내역이 없습니다.</h2>
+      <p class="text-secondary mb-0">스터디 상세 화면에서 신청하면 여기서 상태를 확인할 수 있습니다.</p>
+    </div>
+  </section>
+</main>
+
+
+<footer class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 border-top pt-4 footer-note">
+    <span>개인 프로젝트 UI 시안 · Spring MVC / Thymeleaf 템플릿 연결용</span>
+    <span>Bootstrap 5.3.8 기반 화면</span>
+  </div>
+</footer>
+
+<script th:src="@{/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js}" src="../vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

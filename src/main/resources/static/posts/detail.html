@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle} ?: 'Study Community Platform'">Study Community Platform</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css}" href="../vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="../css/app.css">
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" th:href="@{/}" href="../index.html">
+      <span class="brand-dot"></span>
+      <span>Study Community Platform</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item"><a class="nav-link" th:href="@{/studies}" href="../studies/index.html">스터디</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/posts}" href="../posts/index.html">커뮤니티</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/applications}" href="../applications/index.html">신청내역</a></li>
+        <li class="nav-item"><a class="btn btn-outline-primary btn-sm" th:href="@{/members/login}" href="../members/login.html">로그인</a></li>
+        <li class="nav-item"><a class="btn btn-primary btn-sm" th:href="@{/members/signup}" href="../members/signup.html">회원가입</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<main class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a class="btn btn-outline-secondary" th:href="@{/posts}" href="../posts/index.html">목록으로</a>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" th:href="@{/posts/{id}/edit(id=${post.id})}" href="#">수정</a>
+      <form method="post" th:action="@{/posts/{id}/delete(id=${post.id})}" action="#"><button class="btn btn-outline-danger" type="submit">삭제</button></form>
+    </div>
+  </div>
+  <section class="card soft-card mb-4"><div class="card-body p-4 p-lg-5">
+    <h1 class="section-title mb-3" th:text="${post.title} ?: 'Spring Boot 예외 처리 정리'">제목</h1>
+    <div class="meta-inline mb-4 d-flex flex-column gap-1">
+      <span th:text="|작성자 ${post.member.nickname}|">작성자 코딩하는감자</span>
+      <span th:text="|작성일 ${#temporals.format(post.createdAt, 'yyyy.MM.dd HH:mm')}|">작성일</span>
+    </div>
+    <div class="content-box border rounded-4 p-4 bg-body-tertiary" th:text="${post.content} ?: '게시글 본문이 표시됩니다.'">본문</div>
+  </div></section>
+
+  <section class="card soft-card"><div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 mb-0">댓글</h2>
+      <span class="text-secondary small" th:text="|총 ${comments != null ? #lists.size(comments) : 0}개|">총 0개</span>
+    </div>
+
+    <form class="mb-4" method="post" th:action="@{/posts/{id}/comments(id=${post.id})}" action="#">
+      <label class="form-label">댓글 작성</label>
+      <textarea class="form-control mb-2" name="content" rows="3" placeholder="댓글을 입력하세요."></textarea>
+      <div class="text-end"><button class="btn btn-primary" type="submit">등록</button></div>
+    </form>
+
+    <div class="vstack gap-3" th:if="${comments != null and !#lists.isEmpty(comments)}">
+      <div class="border rounded-4 p-3 bg-light" th:each="comment : ${comments}">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong th:text="${comment.member.nickname} ?: '스터디러'">스터디러</strong>
+          <small class="text-secondary" th:text="${#temporals.format(comment.createdAt, 'yyyy.MM.dd HH:mm')} ?: '2026.03.20 20:00'">2026.03.20 20:00</small>
+        </div>
+        <div th:text="${comment.content} ?: '댓글 내용이 표시됩니다.'">댓글 내용</div>
+      </div>
+    </div>
+
+    <div class="empty-state p-4 text-center" th:unless="${comments != null and !#lists.isEmpty(comments)}">
+      <p class="text-secondary mb-0">첫 댓글을 남겨보세요.</p>
+    </div>
+  </div></section>
+</main>
+
+
+<footer class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 border-top pt-4 footer-note">
+    <span>개인 프로젝트 UI 시안 · Spring MVC / Thymeleaf 템플릿 연결용</span>
+    <span>Bootstrap 5.3.8 기반 화면</span>
+  </div>
+</footer>
+
+<script th:src="@{/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js}" src="../vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

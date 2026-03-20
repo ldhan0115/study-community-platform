@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${pageTitle} ?: 'Study Community Platform'">Study Community Platform</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css}" href="../vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="../css/app.css">
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" th:href="@{/}" href="../index.html">
+      <span class="brand-dot"></span>
+      <span>Study Community Platform</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item"><a class="nav-link" th:href="@{/studies}" href="../studies/index.html">스터디</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/posts}" href="../posts/index.html">커뮤니티</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/applications}" href="../applications/index.html">신청내역</a></li>
+        <li class="nav-item"><a class="btn btn-outline-primary btn-sm" th:href="@{/members/login}" href="../members/login.html">로그인</a></li>
+        <li class="nav-item"><a class="btn btn-primary btn-sm" th:href="@{/members/signup}" href="../members/signup.html">회원가입</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+      <section class="card soft-card"><div class="card-body p-4 p-lg-5">
+        <div class="text-center mb-4"><h1 class="h3 section-title mb-2">회원가입</h1><p class="text-secondary mb-0">Member 엔티티의 loginId, password, email, nickname 기준 폼입니다.</p></div>
+        <form class="row g-3" method="post" th:action="@{/members/signup}" action="#">
+          <div class="col-md-6"><label class="form-label">아이디</label><input class="form-control" type="text" name="loginId" placeholder="4자 이상"></div>
+          <div class="col-md-6"><label class="form-label">닉네임</label><input class="form-control" type="text" name="nickname" placeholder="닉네임"></div>
+          <div class="col-12"><label class="form-label">이메일</label><input class="form-control" type="email" name="email" placeholder="example@email.com"></div>
+          <div class="col-md-6"><label class="form-label">비밀번호</label><input class="form-control" type="password" name="password" placeholder="비밀번호"></div>
+          <div class="col-md-6"><label class="form-label">비밀번호 확인</label><input class="form-control" type="password" name="passwordConfirm" placeholder="비밀번호 확인"></div>
+          <div class="col-12 d-flex gap-2 justify-content-end"><a class="btn btn-outline-secondary" th:href="@{/members/login}" href="../members/login.html">취소</a><button class="btn btn-primary" type="submit">회원가입</button></div>
+        </form>
+      </div></section>
+    </div>
+  </div>
+</main>
+
+
+<footer class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 border-top pt-4 footer-note">
+    <span>개인 프로젝트 UI 시안 · Spring MVC / Thymeleaf 템플릿 연결용</span>
+    <span>Bootstrap 5.3.8 기반 화면</span>
+  </div>
+</footer>
+
+<script th:src="@{/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js}" src="../vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
