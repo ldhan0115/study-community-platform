@@ -14,13 +14,9 @@ public class MemberRepository {
 
     private final EntityManager em;
 
-    // 신규 회원은 persist, 기존 회원은 merge로 저장
+    // 신규 회원 저장
     public void save(Member member) {
-        if (member.getId() == null) {
-            em.persist(member);
-        } else {
-            em.merge(member);
-        }
+        em.persist(member);
     }
 
     // PK 기준 회원 단건 조회
