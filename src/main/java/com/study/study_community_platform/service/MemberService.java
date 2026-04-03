@@ -19,6 +19,7 @@ public class MemberService {
     // 회원 가입
     @Transactional
     public Long join(Member member){
+        // 회원가입 전에 loginId, email, nickname 중복 여부 검사
         validateDuplicateMember(member);
         memberRepository.save(member);
         return member.getId();
@@ -33,6 +34,15 @@ public class MemberService {
     // 전체 회원 조회
     public List<Member> findMembers(){
         return memberRepository.findAll();
+    }
+
+    // 회원 로그인
+    public Member login(String loginId, String password){
+
+        // loginId로 회원을 조회한 뒤 비밀번호가 일치하면 해당 회원 반환
+        return memberRepository.findByLoginId(loginId).stream()
+                .filter(m -> m.getPassword().equals(password))
+                .findAny().orElse(null);
     }
 
     // loginId, email, nickname 중복 여부 검증
