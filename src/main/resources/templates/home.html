@@ -3,235 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="${pageTitle} ?: 'Study Community Platform'">
-    Study Community Platform
-  </title>
+  <title th:text="${pageTitle} ?: 'Study Platform'">Study Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <style>
+    :root { --brand-color: #0d6efd; }
+    body { background-color: #ffffff; }
 
-  <link
-          rel="stylesheet"
-          th:href="@{/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css}"
-          href="/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css"
-  >
-  <link
-          rel="stylesheet"
-          th:href="@{/css/app.css}"
-          href="/css/app.css"
-  >
+    /* 메인 섹션을 화면 높이에 맞춰 꽉 차게 설정 */
+    .hero-full {
+        min-height: calc(85vh - 72px);
+        display: flex;
+        align-items: center;
+        background: radial-gradient(circle at top right, #f8faff 0%, #ffffff 100%);
+    }
+
+    .nav-link { font-weight: 500; color: #495057; transition: 0.2s; }
+    .nav-link:hover { color: var(--brand-color); }
+
+    .main-title { letter-spacing: -0.05rem; line-height: 1.2; }
+    .main-description { line-height: 1.8; color: #6c757d; }
+  </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
-  <div class="container py-2">
-    <a
-            class="navbar-brand fw-semibold d-flex align-items-center gap-2"
-            th:href="@{/}"
-            href="/"
-    >
-      <span class="brand-dot"></span>
-      <span>Study Community Platform</span>
-    </a>
 
-    <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#mainNav"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
+  <div class="container py-1">
+    <a class="navbar-brand fw-bold text-primary fs-4" th:href="@{/}">StudyPlatform</a>
 
     <div class="collapse navbar-collapse" id="mainNav">
-      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-        <li class="nav-item">
-          <a class="nav-link" th:href="@{/studies}" href="/studies">스터디</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" th:href="@{/posts}" href="/posts">커뮤니티</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" th:href="@{/applications}" href="/applications">신청내역</a>
-        </li>
-        <li class="nav-item">
-          <a
-                  class="btn btn-outline-primary btn-sm"
-                  th:href="@{/members/login}"
-                  href="/members/login"
-          >
-            로그인
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-                  class="btn btn-primary btn-sm"
-                  th:href="@{/members/join}"
-                  href="/members/join"
-          >
-            회원가입
-          </a>
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+        <li class="nav-item"><a class="nav-link" th:href="@{/studies}">스터디 탐색</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/posts}">커뮤니티</a></li>
+        <li class="nav-item" th:if="${session.loginMember != null}">
+          <a class="nav-link" th:href="@{/applications}">내 신청내역</a>
         </li>
       </ul>
+
+      <div class="d-flex align-items-center gap-3">
+        <th:block th:if="${session.loginMember == null}">
+          <a class="text-decoration-none text-secondary small" th:href="@{/members/login}">로그인</a>
+          <a class="btn btn-primary px-4 rounded-pill" th:href="@{/members/join}">시작하기</a>
+        </th:block>
+        <th:block th:if="${session.loginMember != null}">
+          <span class="fw-bold small text-dark" th:text="|${session.loginMember.nickname}님|">사용자님</span>
+          <form th:action="@{/members/logout}" method="post" class="m-0">
+            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">로그아웃</button>
+          </form>
+        </th:block>
+      </div>
     </div>
   </div>
 </nav>
 
-<main class="container py-5">
-  <section class="hero-card p-4 p-lg-5 mb-4">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-7">
-          <span class="badge text-bg-primary-subtle text-primary mb-3">
-            SPRING BOOT · JPA · THYMELEAF
-          </span>
+<main class="hero-full">
+  <div class="container text-center">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="mb-4">
+                    <span class="badge rounded-pill bg-primary-subtle text-primary px-4 py-2 small fw-bold">
+                        Portfolio Project
+                    </span>
+        </div>
 
-        <h1 class="display-6 fw-bold section-title mb-3">
-          스터디 모집과 커뮤니티를 한 번에 관리하는 플랫폼
+        <h1 class="display-3 fw-bold main-title mb-4">
+          성장하는 인재를 위한 <br>
+          <span class="text-primary font-monospace">Study Community</span>
         </h1>
 
-        <p class="lead text-secondary mb-4">
-          지금까지 설계한 Member, Study, Application, Post, Comment 도메인을 기준으로
-          화면 흐름을 먼저 연결할 수 있게 구성했습니다.
+        <p class="fs-5 main-description mb-5 px-lg-5">
+          지금 동료를 찾고 지식을 공유해 보세요.
         </p>
 
-        <div class="d-flex flex-wrap gap-2">
-          <a
-                  class="btn btn-primary btn-lg"
-                  th:href="@{/studies}"
-                  href="/studies"
-          >
-            스터디 보러가기
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
+          <a class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" th:href="@{/studies}">
+            스터디 바로가기
           </a>
-          <a
-                  class="btn btn-outline-secondary btn-lg"
-                  th:href="@{/posts}"
-                  href="/posts"
-          >
-            커뮤니티 보기
-          </a>
-        </div>
-      </div>
-
-      <div class="col-lg-5">
-        <div class="row g-3">
-          <div class="col-6">
-            <div class="card soft-card h-100">
-              <div class="card-body">
-                <div class="text-secondary small">진행 중 스터디</div>
-                <div class="fs-2 fw-bold" th:text="${openStudyCount} ?: 12">
-                  12
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-6">
-            <div class="card soft-card h-100">
-              <div class="card-body">
-                <div class="text-secondary small">전체 회원</div>
-                <div class="fs-2 fw-bold" th:text="${memberCount} ?: 86">
-                  86
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-6">
-            <div class="card soft-card h-100">
-              <div class="card-body">
-                <div class="text-secondary small">대기 신청</div>
-                <div
-                        class="fs-2 fw-bold"
-                        th:text="${pendingApplicationCount} ?: 19"
-                >
-                  19
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-6">
-            <div class="card soft-card h-100">
-              <div class="card-body">
-                <div class="text-secondary small">게시글</div>
-                <div class="fs-2 fw-bold" th:text="${postCount} ?: 128">
-                  128
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="row g-4">
-    <div class="col-md-4">
-      <div class="card soft-card h-100">
-        <div class="card-body p-4">
-          <h2 class="h5 fw-bold">스터디 탐색</h2>
-          <p class="text-secondary">
-            진행 방식, 모집 상태, 지역 기준으로 원하는 스터디를 빠르게 찾을 수 있도록
-            구성했습니다.
-          </p>
-          <a
-                  class="btn btn-outline-primary"
-                  th:href="@{/studies}"
-                  href="/studies"
-          >
-            스터디 목록
+          <a class="btn btn-outline-dark btn-lg px-5 py-3 rounded-pill fw-bold" th:href="@{/posts}">
+            커뮤니티 둘러보기
           </a>
         </div>
       </div>
     </div>
-
-    <div class="col-md-4">
-      <div class="card soft-card h-100">
-        <div class="card-body p-4">
-          <h2 class="h5 fw-bold">신청 관리</h2>
-          <p class="text-secondary">
-            신청자 입장과 스터디장 입장 모두 고려해 신청/승인/거절 흐름을 화면에서
-            확인할 수 있게 했습니다.
-          </p>
-          <a
-                  class="btn btn-outline-primary"
-                  th:href="@{/applications}"
-                  href="/applications"
-          >
-            신청 내역
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card soft-card h-100">
-        <div class="card-body p-4">
-          <h2 class="h5 fw-bold">커뮤니티</h2>
-          <p class="text-secondary">
-            질문, 회고, 자료 공유를 위한 게시글과 댓글 화면까지 같이 잡아두었습니다.
-          </p>
-          <a
-                  class="btn btn-outline-primary"
-                  th:href="@{/posts}"
-                  href="/posts"
-          >
-            게시글 보기
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+  </div>
 </main>
 
-<footer class="container py-5">
-  <div
-          class="d-flex flex-column flex-md-row justify-content-between gap-2 border-top pt-4 footer-note"
-  >
-    <span>개인 프로젝트 UI 시안 · Spring MVC / Thymeleaf 템플릿 연결용</span>
-    <span>Bootstrap 5.3.8 기반 화면</span>
+<footer class="py-4 border-top">
+  <div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 text-muted small">
+      <div>&copy; 2026 Study Community Platform.</div>
+      <div class="fw-medium text-secondary">Java 17 · Spring Boot 3.2 · JPA · MySQL</div>
+    </div>
   </div>
 </footer>
 
-<script
-        th:src="@{/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js}"
-        src="/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"
-></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
