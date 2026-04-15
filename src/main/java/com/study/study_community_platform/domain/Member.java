@@ -48,11 +48,13 @@ public class Member {
     private LocalDateTime deletedAt;
 
     // 회원 객체 생성 시 사용하는 생성자
-    public Member(String loginId, String password, String email, String nickname) {
-        this.loginId = loginId;
-        this.password = password;
-        this.email = email;
-        this.nickname = nickname;
+     public static Member createMember(String loginId, String password, String email, String nickname) {
+         Member member = new Member();
+         member.loginId = loginId;
+         member.password = password;
+         member.email = email;
+         member.nickname = nickname;
+         return member;
     }
 
     // 회원 객체가 저장되기 직전에 생성/수정 시간을 세팅

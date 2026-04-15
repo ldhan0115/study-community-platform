@@ -42,7 +42,7 @@ public class MemberController {
             return "members/joinMemberForm";
         }
 
-        Member member = new Member(form.getLoginId(), form.getPassword(), form.getEmail(), form.getNickname());
+        Member member = Member.createMember(form.getLoginId(), form.getPassword(), form.getEmail(), form.getNickname());
         memberService.join(member);
         return "redirect:/members/login";
     }
