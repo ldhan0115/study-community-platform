@@ -2,6 +2,7 @@ package com.study.study_community_platform.controller;
 
 import com.study.study_community_platform.controller.web.JoinMemberForm;
 import com.study.study_community_platform.controller.web.LoginMemberForm;
+import com.study.study_community_platform.controller.web.SessionConst;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/members")
 public class MemberController {
 
-    public static final String LOGIN_MEMBER = "loginMember";
     private final MemberService memberService;
 
     // 회원가입 폼 이동
@@ -42,7 +42,7 @@ public class MemberController {
             return "members/joinMemberForm";
         }
 
-        Member member = new Member(form.getLoginId(), form.getPassword(), form.getEmail(), form.getNickname());
+        Member member = Member.createMember(form.getLoginId(), form.getPassword(), form.getEmail(), form.getNickname());
         memberService.join(member);
         return "redirect:/members/login";
     }
@@ -68,23 +68,26 @@ public class MemberController {
         // 아이디/비밀번호 일치하는 회원 반환
         Member loginMember = memberService.login(form.getLoginId(), form.getPassword());
 
-        // 일치하는 회원 없으면 글로벌 에러 담아서 로그인 화면으로
+        // 인증 실패 시 글로벌 에러 담아서 로그인 화면으로 이동
         if(loginMember == null){
             bindingResult.reject("loginFail", "아이디 또는 비밀번호가 일치하지 않습니다.");
             return "members/loginMemberForm";
         }
 
-        // 로그인 성공 시 세션 생성하고 회원 정보 저장
+        // 인증 성공 시 세션 생성하고 회원 정보 저장
         HttpSession session = request.getSession();
-        session.setAttribute(LOGIN_MEMBER, loginMember);
-        return "loginHome";
+        session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
+        return "redirect:/";
 
     }
 
     @PostMapping("/logout")
     public String logout(HttpServletRequest request){
+
+        // 기존 세션만 가져오고 새로 생성하지 않음
         HttpSession session = request.getSession(false);
         if(session != null){
+            // 세션 정보 완전 삭제 및 무효화
             session.invalidate();
         }
 
