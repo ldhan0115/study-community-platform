@@ -60,7 +60,6 @@ public class MemberService {
                 memberParam.getEmail(), memberParam.getNickname());
     }
 
-
     // loginId, email, nickname 중복 여부 검증
     private void validateDuplicateMember(Member member) {
         List<Member> byLoginId = memberRepository.findByLoginId(member.getLoginId());

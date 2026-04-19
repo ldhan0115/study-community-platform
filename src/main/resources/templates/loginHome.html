@@ -10,7 +10,6 @@
         :root { --brand-color: #0d6efd; }
         body { background-color: #ffffff; }
 
-        /* 메인 섹션을 화면 높이에 맞춰 꽉 차게 설정 */
         .hero-full {
             min-height: calc(85vh - 72px);
             display: flex;
@@ -23,6 +22,35 @@
 
         .main-title { letter-spacing: -0.05rem; line-height: 1.2; }
         .main-description { line-height: 1.8; color: #6c757d; }
+
+        /* 드롭다운 부모 요소 상대 위치 지정 */
+        .dropdown-hover {
+            position: relative;
+        }
+
+        /* 마우스 호버 시 드롭다운 표시 */
+        .dropdown-hover:hover .dropdown-menu {
+            display: block;
+        }
+
+        /* 드롭박스를 마우스(닉네임) 바로 아래에 고정 */
+        .dropdown-hover .dropdown-menu {
+            top: 100%;
+            right: 0;
+            left: auto;
+            margin-top: 5px; /* 닉네임과의 간격 조절 */
+        }
+
+        /* 닉네임과 드롭다운 사이의 틈(Dead Zone)에서 마우스 호버가 풀리지 않도록 투명 다리 생성 */
+        .dropdown-hover .dropdown-menu::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -46,15 +74,23 @@
                     <a class="btn btn-primary px-4 rounded-pill" th:href="@{/members/join}">시작하기</a>
                 </th:block>
                 <th:block th:if="${session.loginMember != null}">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="fw-bold small text-dark ms-1" th:text="|${session.loginMember.nickname}님|">사용자님</span>
+                    <div class="dropdown dropdown-hover d-flex align-items-center">
+                        <span class="fw-bold small text-dark pe-2 py-2" style="cursor: pointer;" th:text="|${session.loginMember.nickname}님|">사용자님</span>
 
-                        <a th:href="@{/members/edit}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                            정보 수정
-                        </a>
-                        <form th:action="@{/members/logout}" method="post" class="m-0">
-                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">로그아웃</button>
-                        </form>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                            <li><a class="dropdown-item py-2" th:href="@{/members/edit}">정보 수정</a></li>
+                            <li>
+                                <form th:action="@{/members/logout}" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item py-2">로그아웃</button>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/members/delete}" method="post" class="m-0" onsubmit="return confirm('정말 탈퇴하시겠습니까? 삭제된 계정은 복구할 수 없습니다.');">
+                                    <button type="submit" class="dropdown-item py-2 text-danger fw-bold">회원 탈퇴</button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
                 </th:block>
             </div>

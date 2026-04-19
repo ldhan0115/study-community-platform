@@ -1,8 +1,8 @@
 package com.study.study_community_platform.controller;
 
-import com.study.study_community_platform.controller.web.EditMemberForm;
-import com.study.study_community_platform.controller.web.JoinMemberForm;
-import com.study.study_community_platform.controller.web.LoginMemberForm;
+import com.study.study_community_platform.controller.web.member.EditMemberForm;
+import com.study.study_community_platform.controller.web.member.JoinMemberForm;
+import com.study.study_community_platform.controller.web.member.LoginMemberForm;
 import com.study.study_community_platform.controller.web.SessionConst;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.domain.Member;
