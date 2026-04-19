@@ -57,6 +57,14 @@ public class Member {
          return member;
     }
 
+    // 회원 정보 수정 메서드
+    public void changeMemberInfo(String loginId, String password, String email, String nickname){
+        this.loginId = loginId;
+        this.password = password;
+        this.email = email;
+        this.nickname = nickname;
+    }
+
     // 회원 객체가 저장되기 직전에 생성/수정 시간을 세팅
     @PrePersist
     public void prePersist(){

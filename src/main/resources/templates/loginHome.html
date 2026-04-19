@@ -46,10 +46,16 @@
                     <a class="btn btn-primary px-4 rounded-pill" th:href="@{/members/join}">시작하기</a>
                 </th:block>
                 <th:block th:if="${session.loginMember != null}">
-                    <span class="fw-bold small text-dark" th:text="|${session.loginMember.nickname}님|">사용자님</span>
-                    <form th:action="@{/members/logout}" method="post" class="m-0">
-                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">로그아웃</button>
-                    </form>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold small text-dark ms-1" th:text="|${session.loginMember.nickname}님|">사용자님</span>
+
+                        <a th:href="@{/members/edit}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            정보 수정
+                        </a>
+                        <form th:action="@{/members/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">로그아웃</button>
+                        </form>
+                    </div>
                 </th:block>
             </div>
         </div>
@@ -67,13 +73,11 @@
                 </div>
 
                 <h1 class="display-3 fw-bold main-title mb-4">
-                    성장하는 개발자를 위한 <br>
+                    성장하는 인재를 위한 <br>
                     <span class="text-primary font-monospace">Study Community</span>
                 </h1>
 
                 <p class="fs-5 main-description mb-5 px-lg-5">
-                    요구사항 분석부터 데이터 모델링, 그리고 실제 서비스 구현까지 <br>
-                    탄탄한 백엔드 로직으로 완성된 스터디 플랫폼입니다. <br>
                     지금 동료를 찾고 지식을 공유해 보세요.
                 </p>
 
