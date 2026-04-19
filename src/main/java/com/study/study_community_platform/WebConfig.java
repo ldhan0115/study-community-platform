@@ -22,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginCheckInterceptor())
                 .order(1) // interceptor 처리 순서
                 .addPathPatterns("/**") // 기본으로 모든 경로 검사
-                .excludePathPatterns("/", "/members/join", "/members/login", "/members/logout",
+                .excludePathPatterns("/", "/members/join", "/members/login", "/members/logout", "/studies",
                         "/css/**", "/vendor/**", "/error"); // 검사 예외 경로
     }
 }
