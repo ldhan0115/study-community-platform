@@ -3,6 +3,7 @@ package com.study.study_community_platform.controller;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.service.MemberService;
 import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
 
 @Slf4j
 @Controller
@@ -49,4 +52,11 @@ public class StudyController {
         return "redirect:/";
     }
 
+    @GetMapping
+    public String list(Model model){
+
+        List<Study> studies = studyService.findStudies();
+        model.addAttribute("studies", studies);
+        return "studies/studyList";
+    }
 }

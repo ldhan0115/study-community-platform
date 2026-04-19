@@ -22,11 +22,17 @@ public class TestDataInit {
     @Transactional // 트랜잭션 보장
     public void init(){
 
-        Member member = Member.createMember("test", "test1234", "test@example.com", "tester");
-        memberRepository.save(member);
+        Member member1 = Member.createMember("test1", "test1234", "test1@example.com", "대한이");
+        memberRepository.save(member1);
 
-        Study study = Study.createStudy(member, "study", "공부해용", StudyMethod.OFFLINE, "서울", 4);
-        studyRepository.save(study);
+        Member member2 = Member.createMember("test2", "test5678", "test2@example.com", "지혜");
+        memberRepository.save(member2);
+
+        Study study1 = Study.createStudy(member1, "취뽀 기원", "취업 할거예용", StudyMethod.OFFLINE, "수원", 4);
+        studyRepository.save(study1);
+
+        Study study2 = Study.createStudy(member2, "철 밥통 개꿀", "공무원 될거예용", StudyMethod.OFFLINE, "세종", 4);
+        studyRepository.save(study2);
 
     }
 }
