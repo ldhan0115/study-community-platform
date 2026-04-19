@@ -1,7 +1,10 @@
 package com.study.study_community_platform;
 
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.domain.Study;
+import com.study.study_community_platform.domain.StudyMethod;
 import com.study.study_community_platform.repository.MemberRepository;
+import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TestDataInit {
 
     private final MemberRepository memberRepository;
+    private final StudyRepository studyRepository;
 
     @EventListener(ApplicationReadyEvent.class) // 컨테이너 준비 완료 후 실행
     @Transactional // 트랜잭션 보장
@@ -20,6 +24,9 @@ public class TestDataInit {
 
         Member member = Member.createMember("test", "test1234", "test@example.com", "tester");
         memberRepository.save(member);
+
+        Study study = Study.createStudy(member, "study", "공부해용", StudyMethod.OFFLINE, "서울", 4);
+        studyRepository.save(study);
 
     }
 }

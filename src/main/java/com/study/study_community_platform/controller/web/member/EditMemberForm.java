@@ -1,4 +1,4 @@
-package com.study.study_community_platform.controller.web;
+package com.study.study_community_platform.controller.web.member;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
