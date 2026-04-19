@@ -45,6 +45,22 @@ public class MemberService {
                 .findAny().orElse(null);
     }
 
+    // 회원 정보 수정
+    @Transactional
+    public void editMember(Long memberId, Member memberParam){
+
+        // 수정할 회원 조회
+        Member findMember = memberRepository.findById(memberId).get();
+
+        // 수정할 정보 중복 검사
+        validateDuplicateMember(memberParam);
+
+        // 정보 수정 (도메인 내부 위치)
+        findMember.changeMemberInfo(memberParam.getLoginId(), memberParam.getPassword(),
+                memberParam.getEmail(), memberParam.getNickname());
+    }
+
+
     // loginId, email, nickname 중복 여부 검증
     private void validateDuplicateMember(Member member) {
         List<Member> byLoginId = memberRepository.findByLoginId(member.getLoginId());

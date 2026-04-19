@@ -1,8 +1,10 @@
 package com.study.study_community_platform.controller;
 
+import com.study.study_community_platform.controller.web.EditMemberForm;
 import com.study.study_community_platform.controller.web.JoinMemberForm;
 import com.study.study_community_platform.controller.web.LoginMemberForm;
 import com.study.study_community_platform.controller.web.SessionConst;
+import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,10 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @Controller
@@ -58,6 +57,7 @@ public class MemberController {
     @PostMapping("/login")
     public String login(@Validated @ModelAttribute("member") LoginMemberForm form,
                         BindingResult bindingResult,
+                        @RequestParam(defaultValue = "/") String redirectURL,
                         HttpServletRequest request){
 
         // 필드 검증 실패 시 로그인 화면으로
@@ -77,6 +77,50 @@ public class MemberController {
         // 인증 성공 시 세션 생성하고 회원 정보 저장
         HttpSession session = request.getSession();
         session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
+
+        // 로그인 하기 전 주소로 이동
+        return "redirect:" + redirectURL;
+
+    }
+
+    // 회원 정보 수정 폼으로 이동
+    @GetMapping("/edit")
+    // 기존에 구현한 @Login 애노테이션 활용해서 로그인된 멤버 주입
+    public String editForm(@Login Member loginMember, Model model){
+
+        EditMemberForm form = new EditMemberForm();
+
+        // 정보 수정할 회원객체 ID 담아서 보냄
+        form.setMemberId(loginMember.getId());
+
+        // 수정 폼 진입 시 기존 데이터가 화면에 보이도록 세팅
+        form.setLoginId(loginMember.getLoginId());
+        form.setEmail(loginMember.getEmail());
+        form.setNickname(loginMember.getNickname());
+
+        model.addAttribute("member", form);
+        return "members/editMemberForm";
+    }
+
+    // 회원정보 수정
+    @PostMapping("/edit")
+    public String edit(@Validated @ModelAttribute("member") EditMemberForm form,
+                       BindingResult bindingResult,
+                       HttpServletRequest request){
+
+        // 필드 검증 실패 시 수정 화면 다시 이동
+        if(bindingResult.hasErrors()) {
+            return "members/editMemberForm";
+        }
+
+        Member editedMember = Member.createMember(form.getLoginId(), form.getPassword(),
+                form.getEmail(), form.getNickname());
+
+        memberService.editMember(form.getMemberId(), editedMember);
+
+        // 정보 수정 완료 후 변경된 정보가 화면에 반영되도록 세션 정보 갱신
+        HttpSession session = request.getSession();
+        session.setAttribute(SessionConst.LOGIN_MEMBER, editedMember);
         return "redirect:/";
 
     }
