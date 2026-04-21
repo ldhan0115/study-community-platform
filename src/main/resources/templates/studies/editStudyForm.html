@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스터디 수정 - Study Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <style>
+        :root { --brand-color: #0d6efd; }
+        body { background-color: #f8f9fa; }
+
+        .nav-link { font-weight: 500; color: #495057; transition: 0.2s; }
+        .nav-link:hover { color: var(--brand-color); }
+
+        .dropdown-hover { position: relative; }
+        .dropdown-hover:hover .dropdown-menu { display: block; }
+        .dropdown-hover .dropdown-menu { top: 100%; right: 0; left: auto; margin-top: 5px; }
+        .dropdown-hover .dropdown-menu::before { content: ''; position: absolute; top: -10px; left: 0; width: 100%; height: 10px; background-color: transparent; }
+
+        .form-container { max-width: 800px; margin: 40px auto; }
+        .card { border: none; border-radius: 1rem; }
+        .form-label { font-weight: 600; color: #495057; margin-bottom: 0.5rem; }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand-color);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
+    <div class="container py-1">
+        <a class="navbar-brand fw-bold text-primary fs-4" th:href="@{/}">StudyPlatform</a>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link text-primary fw-bold" th:href="@{/studies}">스터디 탐색</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/posts}">커뮤니티</a></li>
+                <li class="nav-item" th:if="${session.loginMember != null}">
+                    <a class="nav-link" th:href="@{/applications}">내 신청내역</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3">
+                <th:block th:if="${session.loginMember != null}">
+                    <div class="dropdown dropdown-hover d-flex align-items-center">
+                        <span class="fw-bold small text-dark pe-2 py-2" style="cursor: pointer;" th:text="|${session.loginMember.nickname}님|">사용자님</span>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                            <li><a class="dropdown-item py-2" th:href="@{/members/edit}">정보 수정</a></li>
+                            <li>
+                                <form th:action="@{/members/logout}" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item py-2">로그아웃</button>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/members/delete}" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item py-2 text-danger fw-bold">회원 탈퇴</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <div class="form-container">
+        <div class="mb-4">
+            <h2 class="fw-bold">스터디 정보 수정</h2>
+            <p class="text-muted">변경이 필요한 내용을 수정해 주세요.</p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <form th:action th:object="${editForm}" method="post">
+
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="mb-5">
+                        <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-info-circle me-2"></i>기본 정보</h5>
+
+                        <div class="mb-4">
+                            <label th:for="title" class="form-label">모집 공고 제목</label>
+                            <input type="text" th:field="*{title}" class="form-control form-control-lg" th:errorclass="is-invalid" placeholder="수정할 제목을 입력하세요">
+                            <div class="invalid-feedback" th:errors="*{title}">제목 오류 메시지</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label th:for="capacity" class="form-label">모집 인원 (Capacity)</label>
+                                <div class="input-group has-validation">
+                                    <input type="number" th:field="*{capacity}" class="form-control" th:errorclass="is-invalid">
+                                    <span class="input-group-text bg-white text-secondary">명</span>
+                                    <div class="invalid-feedback" th:errors="*{capacity}">인원 오류 메시지</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-geo-alt me-2"></i>진행 방식 및 지역</h5>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label th:for="method" class="form-label">진행 방식 (Method)</label>
+                                <select th:field="*{method}" class="form-select" th:errorclass="is-invalid">
+                                    <option value="ONLINE">온라인</option>
+                                    <option value="OFFLINE">오프라인</option>
+                                    <option value="MIXED">온/오프라인 혼합</option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{method}">진행 방식 오류 메시지</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label th:for="region" class="form-label">진행 지역 (Region)</label>
+                                <input type="text" th:field="*{region}" class="form-control" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{region}">지역 오류 메시지</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-pencil-square me-2"></i>스터디 소개 (Content)</h5>
+                        <div class="mb-3">
+                            <textarea th:field="*{content}" class="form-control" th:errorclass="is-invalid" rows="8"></textarea>
+                            <div class="invalid-feedback" th:errors="*{content}">본문 오류 메시지</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-4">
+                        <a th:href="@{|/studies/${studyId}|}" class="btn btn-light px-4 py-2 fw-bold text-secondary">취소</a>
+                        <button type="submit" class="btn btn-primary px-5 py-2 fw-bold shadow-sm">수정 완료</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="py-5">
+    <div class="container text-center text-muted small">
+        &copy; 2026 Study Community Platform. All rights reserved.
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
