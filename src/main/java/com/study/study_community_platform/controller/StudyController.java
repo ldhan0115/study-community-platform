@@ -12,10 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -58,5 +55,12 @@ public class StudyController {
         List<Study> studies = studyService.findStudies();
         model.addAttribute("studies", studies);
         return "studies/studyList";
+    }
+
+    @GetMapping("/{studyId}")
+    public String detail(@PathVariable Long studyId, Model model){
+
+        model.addAttribute("study", studyService.findStudy(studyId));
+        return "studies/searchStudy";
     }
 }

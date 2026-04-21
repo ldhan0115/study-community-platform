@@ -104,7 +104,7 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5" th:unless="${studies.empty}">
 
         <div class="col" th:each="study : ${studies}">
-            <div class="card h-100 study-card rounded-4 bg-white shadow-sm p-2" th:onclick="|location.href='@{/studies/{id}(id=${study.id})}'|">
+            <div class="card h-100 study-card rounded-4 bg-white shadow-sm p-2" th:onclick="|location.href='@{/studies/{studyId}(studyId=${study.id})}'|">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1"
