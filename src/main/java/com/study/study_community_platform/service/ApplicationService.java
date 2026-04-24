@@ -1,9 +1,6 @@
 package com.study.study_community_platform.service;
 
-import com.study.study_community_platform.domain.Application;
-import com.study.study_community_platform.domain.Member;
-import com.study.study_community_platform.domain.Study;
-import com.study.study_community_platform.domain.StudyStatus;
+import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
