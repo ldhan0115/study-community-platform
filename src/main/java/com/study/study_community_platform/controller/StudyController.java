@@ -5,6 +5,7 @@ import com.study.study_community_platform.controller.web.study.EditStudyForm;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
+import com.study.study_community_platform.service.ApplicationService;
 import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -23,6 +25,7 @@ import java.util.List;
 public class StudyController {
 
     private final StudyService studyService;
+    private final ApplicationService applicationService;
 
     // 스터디 등록 폼 이동
     @GetMapping("/new")
@@ -61,9 +64,14 @@ public class StudyController {
 
     // 스터디 상세 조회
     @GetMapping("/{studyId}")
-    public String detail(@PathVariable Long studyId, Model model){
+    public String detail(@PathVariable Long studyId,
+                         @Login Member loginMember,
+                         Model model){
 
         model.addAttribute("study", studyService.findStudy(studyId));
+        // 신청 여부 모델에 담아서 전달
+        model.addAttribute("isApplied", applicationService.isApplied(loginMember.getId(), studyId));
+
         return "studies/studyDetail";
     }
 
@@ -95,6 +103,7 @@ public class StudyController {
         return "studies/editStudyForm";
     }
 
+    // 스터디 정보 수정
     @PostMapping("/{studyId}/edit")
     public String edit(@Validated @ModelAttribute("editForm") EditStudyForm form,
                        BindingResult bindingResult,
@@ -114,6 +123,24 @@ public class StudyController {
 
         studyService.updateStudy(studyId, form.getTitle(), form.getContent(),
                 form.getMethod(), form.getRegion(), form.getCapacity());
+
+        return "redirect:/studies/" + studyId;
+    }
+
+    // 스터디 신청
+    @PostMapping("{studyId}/apply")
+    public String applyForm(@RequestParam String message,
+                            @PathVariable Long studyId,
+                            @Login Member loginMember,
+                            RedirectAttributes redirectAttributes){
+
+
+        try{
+            applicationService.applyToStudy(loginMember.getId(), studyId, message);
+            redirectAttributes.addFlashAttribute("successMessage", "스터디 신청이 완료되었습니다.");
+        }catch(IllegalStateException e){
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
 
         return "redirect:/studies/" + studyId;
     }

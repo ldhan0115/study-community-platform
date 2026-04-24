@@ -75,6 +75,19 @@
 </nav>
 
 <main class="container">
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}">성공 메시지</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">에러 메시지</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+
     <div class="study-container">
 
         <div class="card shadow-sm border-0 rounded-4">
@@ -136,8 +149,15 @@
                             </form>
                         </th:block>
 
-                        <th:block th:if="${session.loginMember == null or session.loginMember.id != study.member.id}">
-                            <a href="#" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="alert('스터디 신청 기능은 준비 중입니다.'); return false;">신청하기</a>
+                        <th:block th:if="${session.loginMember != null and session.loginMember.id != study.member.id}">
+                            <button th:if="${isApplied}" type="button" class="btn btn-secondary px-5 fw-bold shadow-sm" disabled>
+                                이미 신청한 스터디입니다
+                            </button>
+
+                            <button th:unless="${isApplied}" type="button" class="btn btn-primary px-5 fw-bold shadow-sm"
+                                    data-bs-toggle="modal" data-bs-target="#applyModal">
+                                신청하기
+                            </button>
                         </th:block>
                     </div>
                 </div>
@@ -145,6 +165,32 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="applyModalLabel">스터디 신청하기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form th:action="@{|/studies/${study.id}/apply|}" method="post">
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-3">스터디장에게 전달할 간단한 인사말이나 각오를 작성해 주세요.</p>
+                        <div class="mb-3">
+                        <textarea class="form-control" id="message" name="message" rows="4"
+                                  placeholder="예) 안녕하세요! 백엔드 개발자 지망생입니다. 열심히 참여하겠습니다!" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">취소</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">신청 완료</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </main>
 
 <footer class="py-5 mt-5">
