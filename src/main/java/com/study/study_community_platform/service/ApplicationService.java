@@ -45,12 +45,6 @@ public class ApplicationService {
             throw new IllegalStateException("스터디 정원이 가득 찼습니다.");
         }
 
-        // 동일 회원이 동일 스터디에 중복 신청했는지 확인
-        List<Application> existingApplication  = applicationRepository.findByMemberIdAndStudyId(memberId, studyId);
-        if(!existingApplication.isEmpty()){
-            throw new IllegalStateException("이미 신청한 스터디입니다.");
-        }
-
         // 스터디 신청 엔티티 생성
         Application application = Application.createApplication(member, study, message);
 
@@ -58,6 +52,15 @@ public class ApplicationService {
         applicationRepository.save(application);
 
         return application.getId();
+    }
+
+    // 동일 회원이 동일 스터디에 중복 신청했는지 확인
+    public boolean isApplied(Long memberId, Long studyId) {
+        List<Application> existingApplication  = applicationRepository.findByMemberIdAndStudyId(memberId, studyId);
+        if(!existingApplication.isEmpty()){
+            return true;
+        }
+        return false;
     }
 
     // 신청 단건 조회
