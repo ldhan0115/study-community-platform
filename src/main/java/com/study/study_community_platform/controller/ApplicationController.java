@@ -3,15 +3,16 @@ package com.study.study_community_platform.controller;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.domain.Application;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.service.ApplicationService;
+import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @Controller
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+    private final StudyService studyService;
 
     // 신청 내역 폼 이동
     @GetMapping
@@ -46,5 +48,37 @@ public class ApplicationController {
         // 신청 상태를 CANCELED로 변경
         applicationService.cancelApplication(applicationId);
         return "redirect:/applications";
+    }
+
+    // 신청 승인
+    @PostMapping("/{applicationId}/approve")
+    public String approve(@PathVariable Long applicationId,
+                          @Login Member loginMember,
+                          @RequestParam Long studyId){
+
+        Study study = studyService.findStudy(studyId);
+        if(!study.getMember().getId().equals(loginMember.getId())){
+            log.warn("권한 없는 사용자의 신청 승인 접근 memberId={}, studyId={}", loginMember.getId(), studyId);
+            return "redirect:/studies/" + studyId + "/applicants";
+        }
+
+        applicationService.approveApplication(applicationId);
+        return "redirect:/studies/" + studyId + "/applicants";
+    }
+
+    // 신청 거절
+    @PostMapping("/{applicationId}/reject")
+    public String reject(@PathVariable Long applicationId,
+                          @Login Member loginMember,
+                          @RequestParam Long studyId){
+
+        Study study = studyService.findStudy(studyId);
+        if(!study.getMember().getId().equals(loginMember.getId())){
+            log.warn("권한 없는 사용자의 신청 거절 접근 memberId={}, studyId={}", loginMember.getId(), studyId);
+            return "redirect:/studies/" + studyId + "/applicants";
+        }
+
+        applicationService.rejectApplication(applicationId);
+        return "redirect:/studies/" + studyId + "/applicants";
     }
 }

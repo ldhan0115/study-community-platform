@@ -3,6 +3,7 @@ package com.study.study_community_platform.controller;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.study.EditStudyForm;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
+import com.study.study_community_platform.domain.Application;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.service.ApplicationService;
@@ -135,6 +136,7 @@ public class StudyController {
                             RedirectAttributes redirectAttributes){
 
 
+        // 신청 성공 여부에 따라 사용자에게 결과 보여줌
         try{
             applicationService.applyToStudy(loginMember.getId(), studyId, message);
             redirectAttributes.addFlashAttribute("successMessage", "스터디 신청이 완료되었습니다.");
@@ -143,5 +145,27 @@ public class StudyController {
         }
 
         return "redirect:/studies/" + studyId;
+    }
+
+    // 스터디 신청 관리 폼 이동
+    @GetMapping("/{studyId}/applicants")
+    public String applicantList(
+            @PathVariable Long studyId,
+            @Login Member loginMember,
+            Model model){
+
+        Study study = studyService.findStudy(studyId);
+
+        // 현재 로그인한 사용자가 스터디장인지 검증
+        if (!study.getMember().getId().equals(loginMember.getId())) {
+            log.warn("권한 없는 사용자의 신청자 관리 접근 memberId={}, studyId={}", loginMember.getId(), study.getId());
+            return "redirect:/studies/" + studyId;
+        }
+
+        List<Application> applications = applicationService.findApplicationsByStudy(studyId);
+
+        model.addAttribute("study", study);
+        model.addAttribute("applications", applications);
+        return "studies/applicantList";
     }
 }
