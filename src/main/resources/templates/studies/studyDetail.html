@@ -79,13 +79,13 @@
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${successMessage}">성공 메시지</span>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
     <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${errorMessage}">에러 메시지</span>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
     <div class="study-container">
@@ -143,6 +143,7 @@
 
                     <div class="d-flex gap-2">
                         <th:block th:if="${session.loginMember != null and session.loginMember.id == study.member.id}">
+                            <a th:href="@{|/studies/${study.id}/applicants|}" class="btn btn-primary px-4 fw-medium shadow-sm">신청자 관리</a>
                             <a th:href="@{|/studies/${study.id}/edit|}" class="btn btn-light border px-4 fw-medium text-dark">수정</a>
                             <form th:action="@{|/studies/${study.id}/delete|}" method="post" class="m-0" onsubmit="return confirm('이 스터디 모집 글을 삭제하시겠습니까?');">
                                 <button type="submit" class="btn btn-danger px-4 fw-medium">삭제</button>
@@ -158,6 +159,12 @@
                                     data-bs-toggle="modal" data-bs-target="#applyModal">
                                 신청하기
                             </button>
+                        </th:block>
+
+                        <th:block th:if="${session.loginMember == null}">
+                            <a th:href="@{/members/login(redirectURL=|/studies/${study.id}|)}" class="btn btn-primary px-5 fw-bold shadow-sm">
+                                신청하기 (로그인 필요)
+                            </a>
                         </th:block>
                     </div>
                 </div>
