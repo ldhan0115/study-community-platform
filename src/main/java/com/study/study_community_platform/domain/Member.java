@@ -23,7 +23,7 @@ public class Member {
     @Column(nullable = false, unique = true, length = 50)
     private String loginId;
 
-    // 비밀번호 (실제 서비스에서는 반드시 암호화된 값 저장)
+    // 비밀번호 (추후 암호화된 값으로 저장)
     @Column(nullable = false, length = 255)
     private String password;
 
