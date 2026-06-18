@@ -77,4 +77,6 @@ public class Member {
     public void preUpdate(){
         this.updatedAt = LocalDateTime.now();
     }
+
+    // TODO: 회원 탈퇴 시 deletedAt 저장
 }
