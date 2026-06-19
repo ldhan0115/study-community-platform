@@ -39,10 +39,10 @@ public class CommentRepository {
     }
 
     // 게시물 기준 댓글 목록 조회
-    public List<Comment> findByPostId(Long postId){
+    public List<Comment> findByStudyId(Long studyId){
 
-        return em.createQuery("select c from Comment c where c.post.id = :postId", Comment.class)
-                .setParameter("postId", postId)
+        return em.createQuery("select c from Comment c where c.study.id = :studyId", Comment.class)
+                .setParameter("studyId", studyId)
                 .getResultList();
     }
 

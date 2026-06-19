@@ -4,9 +4,11 @@ import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.study.EditStudyForm;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
 import com.study.study_community_platform.domain.Application;
+import com.study.study_community_platform.domain.Comment;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.service.ApplicationService;
+import com.study.study_community_platform.service.CommentService;
 import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class StudyController {
 
     private final StudyService studyService;
     private final ApplicationService applicationService;
+    private final CommentService commentService;
 
     // 스터디 등록 폼 이동
     @GetMapping("/new")
@@ -72,6 +75,10 @@ public class StudyController {
         model.addAttribute("study", studyService.findStudy(studyId));
         // 신청 여부 모델에 담아서 전달
         model.addAttribute("isApplied", applicationService.isApplied(loginMember.getId(), studyId));
+
+        // 해당 스터디의 댓글 조회 후 모델에 담아 전달
+        List<Comment> comments = commentService.findCommentsByStudy(studyId);
+        model.addAttribute("comments", comments);
 
         return "studies/studyDetail";
     }

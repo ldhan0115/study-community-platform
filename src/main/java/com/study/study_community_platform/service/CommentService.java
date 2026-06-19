@@ -2,10 +2,10 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.domain.Comment;
 import com.study.study_community_platform.domain.Member;
-import com.study.study_community_platform.domain.Post;
+import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.repository.CommentRepository;
 import com.study.study_community_platform.repository.MemberRepository;
-import com.study.study_community_platform.repository.PostRepository;
+import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,22 +19,22 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final MemberRepository memberRepository;
-    private final PostRepository postRepository;
+    private final StudyRepository studyRepository;
 
     // 댓글 등록
     @Transactional
-    public Long registerComment(Long memberId, Long postId, String content) {
+    public Long registerComment(Long memberId, Long studyId, String content) {
 
         // 댓글 작성 회원 존재 여부 확인
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
-        // 댓글 작성 게시물 존재 여부 확인
-        Post post = postRepository.findById(postId)
+        // 댓글 작성 스터디 존재 여부 확인
+        Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시물입니다."));
 
         // Comment 객체 생성 메서드를 사용
-        Comment comment = Comment.createComment(member, post, content);
+        Comment comment = Comment.createComment(member, study, content);
 
         commentRepository.save(comment);
         return comment.getId();
@@ -51,9 +51,9 @@ public class CommentService {
         return commentRepository.findByMemberId(memberId);
     }
 
-    // 특정 게시물의 댓글 목록 조회
-    public List<Comment> findCommentsByPost(Long postId) {
-        return commentRepository.findByPostId(postId);
+    // 특정 스터디의 댓글 목록 조회
+    public List<Comment> findCommentsByStudy(Long studyId) {
+        return commentRepository.findByStudyId(studyId);
     }
 
     // 전체 댓글 조회
