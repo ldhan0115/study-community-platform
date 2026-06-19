@@ -148,16 +148,33 @@ public class MemberController {
 
     }
 
+    // 로그아웃
     @PostMapping("/logout")
-    public String logout(HttpServletRequest request){
+    public String logout(HttpServletRequest request) {
 
         // 기존 세션만 가져오고 새로 생성하지 않음
         HttpSession session = request.getSession(false);
-        if(session != null){
+        if (session != null) {
             // 세션 정보 완전 삭제 및 무효화
             session.invalidate();
         }
 
         return "redirect:/";
     }
+
+    // 회원 탈퇴
+    @PostMapping("/withdraw")
+    public String withdraw(@Login Member loginMember, HttpServletRequest request){
+
+        memberService.withdrawMember(loginMember.getId());
+
+        HttpSession session = request.getSession(false);
+        if(session != null){
+            session.invalidate();
+        }
+
+        return "redirect:/";
+    }
+
+
 }
