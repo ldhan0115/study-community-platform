@@ -20,10 +20,10 @@ public class Comment {
     @Column(name = "comment_id")
     private Long id;
 
-    // 댓글이 작성된 게시글
+    // 댓글이 작성된 스터디
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @JoinColumn(name = "study_id", nullable = false)
+    private Study study;
 
     // 댓글 작성자
     @ManyToOne(fetch = LAZY)
@@ -59,10 +59,10 @@ public class Comment {
     }
 
     // 댓글 생성 메서드
-    public static Comment createComment(Member member, Post post, String content){
+    public static Comment createComment(Member member, Study study, String content){
         Comment comment = new Comment();
         comment.member = member;
-        comment.post = post;
+        comment.study = study;
         comment.content = content;
         return comment;
     }
