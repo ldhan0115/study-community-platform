@@ -1,5 +1,6 @@
 package com.study.study_community_platform.service;
 
+import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,15 @@ public class MemberService {
         // 정보 수정 (도메인 내부 위치)
         findMember.changeMemberInfo(memberParam.getLoginId(), memberParam.getPassword(),
                 memberParam.getEmail(), memberParam.getNickname());
+    }
+
+    // 회원 탈퇴
+    @Transactional
+    public void withdrawMember(Long memberId) {
+        Member findMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
+
+        findMember.withdraw();
     }
 
     // loginId, email, nickname 중복 여부 검증

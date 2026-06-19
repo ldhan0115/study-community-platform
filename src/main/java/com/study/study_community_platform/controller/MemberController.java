@@ -42,7 +42,30 @@ public class MemberController {
         }
 
         Member member = Member.createMember(form.getLoginId(), form.getPassword(), form.getEmail(), form.getNickname());
-        memberService.join(member);
+
+        // 중복 검사 예외 처리
+        try{
+            memberService.join(member);
+        }catch(IllegalStateException e){
+            // service 에서 던진 메시지를 잡아냄
+            String errMessage = e.getMessage();
+
+            // 에러 메시지 내용에 따라 해당하는 필드에 에러 매핑
+            if(errMessage.contains("ID")){
+                bindingResult.rejectValue("loginId", "duplicate", errMessage);
+            }else if(errMessage.contains("EMAIL")){
+                bindingResult.rejectValue("email", "duplicate", errMessage);
+            }else if(errMessage.contains("NICKNAME")){
+                bindingResult.rejectValue("nickname", "duplicate", errMessage);
+            }else{
+                // 그 외의 예외일 경우 글로벌 에러로 처리
+                bindingResult.reject("joinFail", errMessage);
+            }
+
+            // 에러를 담고 다시 회원가입 폼으로 이동
+            return "members/joinMemberForm";
+        }
+
         return "redirect:/members/login";
     }
 
@@ -125,16 +148,33 @@ public class MemberController {
 
     }
 
+    // 로그아웃
     @PostMapping("/logout")
-    public String logout(HttpServletRequest request){
+    public String logout(HttpServletRequest request) {
 
         // 기존 세션만 가져오고 새로 생성하지 않음
         HttpSession session = request.getSession(false);
-        if(session != null){
+        if (session != null) {
             // 세션 정보 완전 삭제 및 무효화
             session.invalidate();
         }
 
         return "redirect:/";
     }
+
+    // 회원 탈퇴
+    @PostMapping("/withdraw")
+    public String withdraw(@Login Member loginMember, HttpServletRequest request){
+
+        memberService.withdrawMember(loginMember.getId());
+
+        HttpSession session = request.getSession(false);
+        if(session != null){
+            session.invalidate();
+        }
+
+        return "redirect:/";
+    }
+
+
 }

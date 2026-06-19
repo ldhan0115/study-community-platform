@@ -77,4 +77,9 @@ public class Member {
     public void preUpdate(){
         this.updatedAt = LocalDateTime.now();
     }
+
+    // 회원 탈퇴 시 현재 시간으로 갱신 -> 소프트 딜리트(Soft Delete) 방식
+    public void withdraw(){
+         this.deletedAt = LocalDateTime.now();
+    }
 }
