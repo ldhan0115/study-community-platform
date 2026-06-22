@@ -52,7 +52,7 @@ public class CommentService {
     }
 
     // 특정 스터디의 댓글 목록 조회
-    public List<Comment> findCommentsByStudy(Long studyId) {
+    public List<Comment> findCommentsByStudyId(Long studyId) {
         return commentRepository.findByStudyId(studyId);
     }
 
@@ -74,7 +74,11 @@ public class CommentService {
     // 댓글 삭제
     @Transactional
     public void deleteComment(Long commendId) {
-        commentRepository.delete(commendId);
+        Comment comment = commentRepository
+                .findById(commendId)
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 댓글입니다."));
+
+        comment.withdraw();
     }
 
 

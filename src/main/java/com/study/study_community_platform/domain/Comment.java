@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +13,8 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+// 삭제된 댓글은 제외하고 조회
+@SQLRestriction("deleted_at is NULL")
 public class Comment {
 
     // 댓글의 기본키 (PK)
@@ -70,5 +73,10 @@ public class Comment {
     // 댓글 내용 수정 메서드
     public void changeCommentInfo(String content) {
         this.content = content;
+    }
+
+    // 댓글 삭제 (Soft Delete) 처리
+    public void withdraw(){
+        this.deletedAt = LocalDateTime.now();
     }
 }
