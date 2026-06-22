@@ -169,85 +169,114 @@
                     </div>
                 </div>
             </div>
-        </div> <div class="card shadow-sm border-0 rounded-4 mt-4">
-        <div class="card-body p-4 p-md-5">
-            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-chat-dots me-2"></i>Q&A 댓글</h5>
+        </div>
 
-            <div class="mb-5 border-bottom pb-4">
-                <form th:action="@{|/studies/${study.id}/comments|}" method="post">
-                    <div th:if="${session.loginMember != null}">
-                        <textarea class="form-control bg-light border-0 mb-3 p-3 rounded-3" name="content" rows="3" placeholder="스터디에 대해 궁금한 점을 자유롭게 남겨보세요." required></textarea>
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">댓글 등록</button>
+        <div class="card shadow-sm border-0 rounded-4 mt-4">
+            <div class="card-body p-4 p-md-5">
+                <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-chat-dots me-2"></i>Q&A 댓글</h5>
+
+                <div class="mb-5 border-bottom pb-4">
+                    <form th:action="@{|/studies/${study.id}/comments|}" method="post">
+                        <div th:if="${session.loginMember != null}">
+                            <textarea class="form-control bg-light border-0 mb-3 p-3 rounded-3" name="content" rows="3" placeholder="스터디에 대해 궁금한 점을 자유롭게 남겨보세요." required></textarea>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">댓글 등록</button>
+                            </div>
+                        </div>
+                        <div th:if="${session.loginMember == null}">
+                            <textarea class="form-control bg-light border-0 mb-3 p-3 rounded-3" rows="3" placeholder="로그인 후 댓글을 작성할 수 있습니다." disabled></textarea>
+                            <div class="d-flex justify-content-end">
+                                <a th:href="@{/members/login(redirectURL=|/studies/${study.id}|)}" class="btn btn-outline-primary px-4 fw-bold rounded-pill">로그인하기</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="comment-list">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="text-dark fw-bold">전체 댓글 <span class="text-primary" th:text="${comments != null ? comments.size() : 0}">0</span>개</span>
+                    </div>
+
+                    <div th:if="${comments != null and !#lists.isEmpty(comments)}">
+                        <div th:each="comment : ${comments}" class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;" th:text="${#strings.substring(comment.member.nickname, 0, 1)}">홍</div>
+                                    <div>
+                                        <span class="fw-bold text-dark d-block" style="font-size: 0.95rem;" th:text="${comment.member.nickname}">홍길동</span>
+                                        <span class="text-muted small" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2026-04-19 15:00</span>
+                                    </div>
+                                </div>
+
+                                <div th:if="${session.loginMember != null and session.loginMember.id == comment.member.id}" class="d-flex gap-3 align-items-center">
+                                    <button type="button" class="btn btn-link text-primary p-0 text-decoration-none small fw-medium"
+                                            data-bs-toggle="modal" th:data-bs-target="|#editCommentModal-${comment.id}|">수정</button>
+
+                                    <form th:action="@{|/studies/${study.id}/comments/${comment.id}/delete|}" method="post" class="m-0"
+                                          onsubmit="return confirm('이 댓글을 삭제하시겠습니까?');">
+                                        <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none small fw-medium">삭제</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="text-dark mt-2 ps-1" style="white-space: pre-wrap; font-size: 0.95rem;" th:text="${comment.content}">
+                                댓글 내용입니다.
+                            </div>
+
+                            <div class="modal fade" th:id="|editCommentModal-${comment.id}|" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow-lg rounded-4">
+                                        <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                                            <h5 class="modal-title fw-bold">댓글 수정</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form th:action="@{|/studies/${study.id}/comments/${comment.id}/edit|}" method="post">
+                                            <div class="modal-body p-4">
+                                                <textarea class="form-control bg-light border-0 p-3 rounded-3" name="content" rows="4" required th:text="${comment.content}"></textarea>
+                                            </div>
+                                            <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                                                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">취소</button>
+                                                <button type="submit" class="btn btn-primary px-4 fw-bold">수정 완료</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div th:if="${session.loginMember == null}">
-                        <textarea class="form-control bg-light border-0 mb-3 p-3 rounded-3" rows="3" placeholder="로그인 후 댓글을 작성할 수 있습니다." disabled></textarea>
-                        <div class="d-flex justify-content-end">
-                            <a th:href="@{/members/login(redirectURL=|/studies/${study.id}|)}" class="btn btn-outline-primary px-4 fw-bold rounded-pill">로그인하기</a>
+
+                    <div th:if="${comments == null or #lists.isEmpty(comments)}" class="text-center py-5">
+                        <i class="bi bi-chat-square-text text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="text-muted mt-3 mb-0 fw-medium">등록된 댓글이 없습니다.<br>첫 번째 질문을 남겨보세요!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold" id="applyModalLabel">스터디 신청하기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form th:action="@{|/studies/${study.id}/apply|}" method="post">
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-3">스터디장에게 전달할 간단한 인사말이나 각오를 작성해 주세요.</p>
+                        <div class="mb-3">
+                            <textarea class="form-control" id="message" name="message" rows="4"
+                                      placeholder="예) 안녕하세요! 백엔드 개발자 지망생입니다. 열심히 참여하겠습니다!" required></textarea>
                         </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">취소</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">신청 완료</button>
                     </div>
                 </form>
             </div>
-
-            <div class="comment-list">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <span class="text-dark fw-bold">전체 댓글 <span class="text-primary" th:text="${comments != null ? comments.size() : 0}">0</span>개</span>
-                </div>
-
-                <div th:if="${comments != null and !#lists.isEmpty(comments)}">
-                    <div th:each="comment : ${comments}" class="border-bottom pb-3 mb-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;" th:text="${#strings.substring(comment.member.nickname, 0, 1)}">홍</div>
-                                <div>
-                                    <span class="fw-bold text-dark d-block" style="font-size: 0.95rem;" th:text="${comment.member.nickname}">홍길동</span>
-                                    <span class="text-muted small" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}">2026-04-19 15:00</span>
-                                </div>
-                            </div>
-
-                            <form th:if="${session.loginMember != null and session.loginMember.id == comment.member.id}"
-                                  th:action="@{|/studies/${study.id}/comments/${comment.id}/delete|}" method="post" class="m-0"
-                                  onsubmit="return confirm('이 댓글을 삭제하시겠습니까?');">
-                                <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none small fw-medium">삭제</button>
-                            </form>
-                        </div>
-                        <div class="text-dark mt-2 ps-1" style="white-space: pre-wrap; font-size: 0.95rem;" th:text="${comment.content}">
-                            댓글 내용입니다.
-                        </div>
-                    </div>
-                </div>
-
-                <div th:if="${comments == null or #lists.isEmpty(comments)}" class="text-center py-5">
-                    <i class="bi bi-chat-square-text text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <p class="text-muted mt-3 mb-0 fw-medium">등록된 댓글이 없습니다.<br>첫 번째 질문을 남겨보세요!</p>
-                </div>
-            </div>
-        </div>
-    </div> </div> <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold" id="applyModalLabel">스터디 신청하기</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form th:action="@{|/studies/${study.id}/apply|}" method="post">
-                <div class="modal-body p-4">
-                    <p class="text-muted small mb-3">스터디장에게 전달할 간단한 인사말이나 각오를 작성해 주세요.</p>
-                    <div class="mb-3">
-                        <textarea class="form-control" id="message" name="message" rows="4"
-                                  placeholder="예) 안녕하세요! 백엔드 개발자 지망생입니다. 열심히 참여하겠습니다!" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
-                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">취소</button>
-                    <button type="submit" class="btn btn-primary px-4 fw-bold">신청 완료</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
 
 </main>
 

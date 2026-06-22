@@ -77,7 +77,7 @@ public class StudyController {
         model.addAttribute("isApplied", applicationService.isApplied(loginMember.getId(), studyId));
 
         // 해당 스터디의 댓글 조회 후 모델에 담아 전달
-        List<Comment> comments = commentService.findCommentsByStudy(studyId);
+        List<Comment> comments = commentService.findCommentsByStudyId(studyId);
         model.addAttribute("comments", comments);
 
         return "studies/studyDetail";
