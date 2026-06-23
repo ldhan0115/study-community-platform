@@ -175,4 +175,19 @@ public class StudyController {
         model.addAttribute("applications", applications);
         return "studies/applicantList";
     }
+
+    // 스터디 삭제
+    @PostMapping("/{studyId}/delete")
+    public String deleteStudy(@Login Member loginMember, @PathVariable Long studyId){
+
+        Study study = studyService.findStudy(studyId);
+
+        if(study.getMember().getId().equals(loginMember.getId())){
+            studyService.deleteStudy(studyId);
+        }else{
+            log.warn("권한 없는 사용자의 스터디 삭제 시도. memberId={}, studyId={}", loginMember.getId(), studyId);
+        }
+
+        return "redirect:/studies";
+    }
 }
