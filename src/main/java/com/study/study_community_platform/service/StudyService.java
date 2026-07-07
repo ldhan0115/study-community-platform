@@ -39,6 +39,7 @@ public class StudyService {
     public Study findStudy(Long studyId){
         return studyRepository.findById(studyId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+
     }
 
     // 전체 스터디 조회
@@ -72,6 +73,9 @@ public class StudyService {
     // 스터디 삭제
     @Transactional
     public void deleteStudy(Long studyId){
-        studyRepository.delete(studyId);
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+
+        study.withdraw();
     }
 }

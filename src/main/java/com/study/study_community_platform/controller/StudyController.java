@@ -3,10 +3,7 @@ package com.study.study_community_platform.controller;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.study.EditStudyForm;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
-import com.study.study_community_platform.domain.Application;
-import com.study.study_community_platform.domain.Comment;
-import com.study.study_community_platform.domain.Member;
-import com.study.study_community_platform.domain.Study;
+import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.service.ApplicationService;
 import com.study.study_community_platform.service.CommentService;
 import com.study.study_community_platform.service.StudyService;
@@ -47,6 +44,11 @@ public class StudyController {
                            @Validated @ModelAttribute("studyForm") RegisterStudyForm form,
                            BindingResult bindingResult){
 
+        // 오프라인일 때만 지역 정보가 필수이므로 폼 에러를 동적으로 제어
+        if(form.getMethod() != StudyMethod.ONLINE && (form.getRegion() == null || form.getRegion().trim().isEmpty())){
+            bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
+        }
+
         if(bindingResult.hasErrors()){
             return "studies/registerStudyForm";
         }
@@ -54,7 +56,7 @@ public class StudyController {
         studyService.registerStudy(loginMember.getId(), form.getTitle(), form.getContent(),
                 form.getMethod(), form.getRegion(), form.getCapacity());
 
-        return "redirect:/";
+        return "redirect:/studies";
     }
 
     // 스터디 전체 목록 조회
@@ -73,6 +75,13 @@ public class StudyController {
                          Model model){
 
         model.addAttribute("study", studyService.findStudy(studyId));
+
+        // 비로그인 사용자 NPE 방어
+        boolean isApplied = false;
+        if(loginMember != null){
+            isApplied = applicationService.isApplied(loginMember.getId(), studyId);
+        }
+
         // 신청 여부 모델에 담아서 전달
         model.addAttribute("isApplied", applicationService.isApplied(loginMember.getId(), studyId));
 
@@ -125,9 +134,14 @@ public class StudyController {
             return "redirect:/studies/" + studyId;
         }
 
+        if(form.getMethod() != StudyMethod.ONLINE && (form.getRegion() == null || form.getRegion().trim().isEmpty())){
+            bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
+        }
+
         if(bindingResult.hasErrors()){
             return "studies/editStudyForm";
         }
+
 
         studyService.updateStudy(studyId, form.getTitle(), form.getContent(),
                 form.getMethod(), form.getRegion(), form.getCapacity());

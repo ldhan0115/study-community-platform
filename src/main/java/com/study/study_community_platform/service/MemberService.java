@@ -26,8 +26,9 @@ public class MemberService {
     }
 
     // 회원 단건 조회
-    public Optional<Member> findMember(Long memberId){
-        return memberRepository.findById(memberId);
+    public Member findMember(Long memberId){
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
     }
 
     // 전체 회원 조회
