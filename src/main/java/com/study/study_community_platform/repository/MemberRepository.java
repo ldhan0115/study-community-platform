@@ -1,54 +1,18 @@
 package com.study.study_community_platform.repository;
 
 import com.study.study_community_platform.domain.Member;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.Optional;
 
-@Repository
-@RequiredArgsConstructor
-public class MemberRepository {
+// 단순 JPA -> 스프링 데이터 JPA 적용
+public interface MemberRepository extends JpaRepository<Member, Long> {
 
-    private final EntityManager em;
+    // 단건 조회
+    Optional<Member> findByLoginId(String loginId);
 
-    // 신규 회원 저장
-    public void save(Member member) {
-        em.persist(member);
-    }
-
-    // PK 기준 회원 단건 조회
-    // 조회 결과가 없을 수 있다는 걸 감안해서 Optional로 감싸서 반환
-    public Optional<Member> findById(Long id) {
-        return Optional.ofNullable(em.find(Member.class, id));
-    }
-
-    // loginId 기준 회원 조회
-    public List<Member> findByLoginId(String loginId){
-        return em.createQuery("select m from Member m where m.loginId = :loginId", Member.class)
-                .setParameter("loginId", loginId)
-                .getResultList();
-    }
-
-    // email 기준 회원 조회
-    public List<Member> findByEmail(String email){
-        return em.createQuery("select m from Member m where m.email = :email", Member.class)
-                .setParameter("email", email)
-                .getResultList();
-    }
-
-    // nickname 기준 회원 조회
-    public List<Member> findByNickname(String nickname){
-        return em.createQuery("select m from Member m where m.nickname = :nickname", Member.class)
-                .setParameter("nickname", nickname)
-                .getResultList();
-    }
-
-    // 전체 회원 조회
-    public List<Member> findAll() {
-        return em.createQuery("select m from Member m", Member.class)
-                .getResultList();
-    }
+    // 조건에 맞는 데이터가 있는지 boolean 값만 반환받도록 처리(EXISTS 쿼리 발생) -> 쿼리 성능 최적화
+    boolean existsByLoginId(String loginId);
+    boolean existsByEmail(String email);
+    boolean existsByNickname(String nickname);
 }
