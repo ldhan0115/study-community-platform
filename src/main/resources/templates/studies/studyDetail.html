@@ -96,7 +96,7 @@
                 <div class="border-bottom pb-4 mb-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">모집중</span>
-                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill" th:text="${study.method.name() == 'ONLINE' ? '온라인' : (study.method.name() == 'OFFLINE' ? '오프라인' : '온/오프라인 혼합')}">온라인</span>
+                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill" th:text="${study.method.name() == 'ONLINE' ? '온라인' : '오프라인'}">온라인</span>
                     </div>
 
                     <h2 class="fw-bold mb-4" th:text="${study.title}">스프링 핵심 원리 스터디원 모집합니다</h2>

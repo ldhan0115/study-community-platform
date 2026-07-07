@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +13,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("deleted_at is NULL")
 public class Study {
 
     // 스터디의 기본 키 (PK)
@@ -87,8 +89,8 @@ public class Study {
         }
 
         // 모집 정원 검증
-        if (capacity < 1) {
-            throw new IllegalArgumentException("정원은 1명 이상이어야 합니다.");
+        if (capacity < 2) {
+            throw new IllegalArgumentException("정원은 2명 이상이어야 합니다.");
         }
 
         Study study = new Study();
@@ -144,5 +146,10 @@ public class Study {
     // 모집 마감 처리
     public void close(){
         studyStatus = StudyStatus.CLOSED;
+    }
+
+    // 스터디 삭제 (Soft Delete) 처리
+    public void withdraw(){
+        this.deletedAt = LocalDateTime.now();
     }
 }

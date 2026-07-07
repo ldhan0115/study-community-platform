@@ -21,7 +21,6 @@ public class EditStudyForm {
     @NotNull(message = "진행 방식을 선택해주세요.")
     private StudyMethod method;
 
-    @NotBlank(message = "지역을 입력해주세요")
     private String region;
 
     @NotBlank(message = "스터디 소개를 입력해주세요.")
