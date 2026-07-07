@@ -1,6 +1,5 @@
 package com.study.study_community_platform.service;
 
-import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +26,8 @@ public class MemberService {
     }
 
     // 회원 단건 조회
-    public Member findMember(Long memberId){
-        Optional<Member> byId = memberRepository.findById(memberId);
-        return byId.orElse(null); // 해당 회원 없으면 null 반환
+    public Optional<Member> findMember(Long memberId){
+        return memberRepository.findById(memberId);
     }
 
     // 전체 회원 조회
@@ -41,9 +39,10 @@ public class MemberService {
     public Member login(String loginId, String password){
 
         // loginId로 회원을 조회한 뒤 비밀번호가 일치하면 해당 회원 반환
-        return memberRepository.findByLoginId(loginId).stream()
+        // Optional의 filter 사용
+        return memberRepository.findByLoginId(loginId)
                 .filter(m -> m.getPassword().equals(password))
-                .findAny().orElse(null);
+                .orElse(null);
     }
 
     // 회원 정보 수정
@@ -51,12 +50,13 @@ public class MemberService {
     public void editMember(Long memberId, Member memberParam){
 
         // 수정할 회원 조회
-        Member findMember = memberRepository.findById(memberId).get();
+        Member findMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
 
         // 수정할 정보 중복 검사
-        validateDuplicateMember(memberParam);
+        validateDuplicateMemberForEdit(findMember ,memberParam);
 
-        // 정보 수정 (도메인 내부 위치)
+        // 정보 수정 (도메인 내부에 위치)
         findMember.changeMemberInfo(memberParam.getLoginId(), memberParam.getPassword(),
                 memberParam.getEmail(), memberParam.getNickname());
     }
@@ -70,20 +70,36 @@ public class MemberService {
         findMember.withdraw();
     }
 
-    // loginId, email, nickname 중복 여부 검증
+    // loginId, email, nickname 중복 여부 검증 (existsBy 적용)
     private void validateDuplicateMember(Member member) {
-        List<Member> byLoginId = memberRepository.findByLoginId(member.getLoginId());
-        if(!byLoginId.isEmpty()){
-            throw new IllegalStateException("동일한 ID가 존재합니다.");
+        if(memberRepository.existsByLoginId(member.getLoginId())){
+            throw new IllegalStateException(("동일한 ID가 존재합니다."));
         }
 
-        List<Member> byEmail = memberRepository.findByEmail(member.getEmail());
-        if(!byEmail.isEmpty()){
+        if(memberRepository.existsByEmail(member.getEmail())){
             throw new IllegalStateException("동일한 EMAIL이 존재합니다.");
         }
 
-        List<Member> byNickname = memberRepository.findByNickname(member.getNickname());
-        if(!byNickname.isEmpty()){
+        if(memberRepository.existsByNickname(member.getNickname())){
+            throw new IllegalStateException("동일한 NICKNAME이 존재합니다.");
+        }
+    }
+
+    // 정보 수정용 중복 검사
+    // 기존 회원의 정보와 폼에서 넘어온 새로운 정보가 다를 경우에만 중복 검사를 실행하도록 방어 로직 추가
+    private void validateDuplicateMemberForEdit(Member findMember, Member memberParam){
+        if(!findMember.getLoginId().equals(memberParam.getLoginId())
+            && memberRepository.existsByLoginId(memberParam.getLoginId())){
+            throw new IllegalStateException(("동일한 ID가 존재합니다."));
+        }
+
+        if(!findMember.getEmail().equals(memberParam.getEmail())
+                && memberRepository.existsByEmail(memberParam.getEmail())){
+            throw new IllegalStateException("동일한 EMAIL이 존재합니다.");
+        }
+
+        if(!findMember.getNickname().equals(memberParam.getNickname())
+                && memberRepository.existsByNickname(memberParam.getNickname())){
             throw new IllegalStateException("동일한 NICKNAME이 존재합니다.");
         }
     }
