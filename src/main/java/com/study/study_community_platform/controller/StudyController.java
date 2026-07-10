@@ -83,7 +83,7 @@ public class StudyController {
         }
 
         // 신청 여부 모델에 담아서 전달
-        model.addAttribute("isApplied", applicationService.isApplied(loginMember.getId(), studyId));
+        model.addAttribute("isApplied", isApplied);
 
         // 해당 스터디의 댓글 조회 후 모델에 담아 전달
         List<Comment> comments = commentService.findCommentsByStudyId(studyId);

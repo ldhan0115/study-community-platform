@@ -34,7 +34,6 @@
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
         <li class="nav-item"><a class="nav-link" th:href="@{/studies}">스터디 탐색</a></li>
-        <li class="nav-item"><a class="nav-link" th:href="@{/posts}">커뮤니티</a></li>
         <li class="nav-item" th:if="${session.loginMember != null}">
           <a class="nav-link" th:href="@{/applications}">내 신청내역</a>
         </li>
@@ -78,9 +77,6 @@
         <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
           <a class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" th:href="@{/studies}">
             스터디 바로가기
-          </a>
-          <a class="btn btn-outline-dark btn-lg px-5 py-3 rounded-pill fw-bold" th:href="@{/posts}">
-            커뮤니티 둘러보기
           </a>
         </div>
       </div>

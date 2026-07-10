@@ -13,7 +13,7 @@ public class RegisterStudyForm {
     @NotBlank(message = "스터디 제목을 입력해주세요.")
     private String title;
 
-    @Min(value = 2, message = "모집 인원을 입력해주세요.")
+    @Min(value = 1, message = "모집 인원은 1명 이상이어야 합니다.")
     private int capacity;
 
     @NotNull(message = "진행 방식을 선택해주세요.")

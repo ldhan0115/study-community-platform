@@ -31,6 +31,12 @@ public class TestDataInit {
         Member member2 = Member.createMember("test2", "test5678", "test2@example.com", "지혜");
         memberRepository.save(member2);
 
+        Member member3 = Member.createMember("test3", "test1111", "test3@example.com", "길동");
+        memberRepository.save(member3);
+
+        Member member4 = Member.createMember("test4", "test2222", "test4@example.com", "둘리");
+        memberRepository.save(member4);
+
         Study study1 = Study.createStudy(member1, "취뽀 기원", "취업 할거예용", StudyMethod.OFFLINE, "수원", 4);
         studyRepository.save(study1);
 

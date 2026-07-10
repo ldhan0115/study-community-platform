@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -25,9 +26,7 @@ public class ApplicationController {
 
     // 신청 내역 폼 이동
     @GetMapping
-    public String listForm(
-            @Login Member member,
-            Model model){
+    public String listForm(@Login Member member, Model model){
 
         model.addAttribute("applications", applicationService.findApplicationsByMember(member.getId()));
         return "applications/applicationList";
@@ -46,7 +45,7 @@ public class ApplicationController {
         }
 
         // 신청 상태를 CANCELED로 변경
-        applicationService.cancelApplication(applicationId);
+        applicationService.cancelApplication(application);
         return "redirect:/applications";
     }
 
@@ -54,7 +53,8 @@ public class ApplicationController {
     @PostMapping("/{applicationId}/approve")
     public String approve(@PathVariable Long applicationId,
                           @Login Member loginMember,
-                          @RequestParam Long studyId){
+                          @RequestParam Long studyId,
+                          RedirectAttributes redirectAttributes){
 
         Study study = studyService.findStudy(studyId);
         if(!study.getMember().getId().equals(loginMember.getId())){
@@ -62,7 +62,12 @@ public class ApplicationController {
             return "redirect:/studies/" + studyId + "/applicants";
         }
 
-        applicationService.approveApplication(applicationId);
+        try{
+            applicationService.approveApplication(applicationId);
+        }catch (IllegalStateException e){
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
         return "redirect:/studies/" + studyId + "/applicants";
     }
 
