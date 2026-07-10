@@ -89,8 +89,8 @@ public class Study {
         }
 
         // 모집 정원 검증
-        if (capacity < 2) {
-            throw new IllegalArgumentException("정원은 2명 이상이어야 합니다.");
+        if (capacity < 1) {
+            throw new IllegalArgumentException("모집 인원은 1명 이상이어야 합니다.");
         }
 
         Study study = new Study();
@@ -126,7 +126,7 @@ public class Study {
         }
 
         if (capacity < 1) {
-            throw new IllegalArgumentException("정원은 1명 이상이어야 합니다.");
+            throw new IllegalArgumentException("모집 인원은 1명 이상이어야 합니다.");
         }
 
         this.title = title;

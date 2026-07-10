@@ -39,7 +39,6 @@
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
                 <li class="nav-item"><a class="nav-link text-primary fw-bold" th:href="@{/studies}">스터디 탐색</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/posts}">커뮤니티</a></li>
                 <li class="nav-item" th:if="${session.loginMember != null}">
                     <a class="nav-link" th:href="@{/applications}">내 신청내역</a>
                 </li>
@@ -95,7 +94,7 @@
 
                 <div class="border-bottom pb-4 mb-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">모집중</span>
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill" th:text="${study.studyStatus.name() == 'OPEN' ? '모집중' : '마감'}">모집중</span>
                         <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill" th:text="${study.method.name() == 'ONLINE' ? '온라인' : '오프라인'}">온라인</span>
                     </div>
 

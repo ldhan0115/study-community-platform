@@ -12,12 +12,6 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(
-        // 동일 회원이 동일 스터디에 중복 신청하는 것을 방지
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uq_member_id_study_id", columnNames = {"member_id", "study_id"})
-        }
-)
 public class Application {
 
     // 신청의 기본키 (PK)
@@ -95,6 +89,7 @@ public class Application {
     // 신청 취소
     public void cancel() {
         this.status = ApplicationStatus.CANCELED;
+
     }
 
 }
