@@ -104,7 +104,8 @@ public class ApplicationService {
 
     // 스터디 신청 취소
     @Transactional
-    public void cancelApplication(Application application) {
+    public void cancelApplication(Long applicationId) {
+        Application application = findApplication(applicationId);
         application.cancel();
     }
 

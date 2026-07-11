@@ -45,7 +45,7 @@ public class ApplicationController {
         }
 
         // 신청 상태를 CANCELED로 변경
-        applicationService.cancelApplication(application);
+        applicationService.cancelApplication(applicationId);
         return "redirect:/applications";
     }
 
