@@ -63,20 +63,28 @@ public class CommentService {
 
     // 댓글 수정
     @Transactional
-    public void updateComment(Long commentId, String content) {
+    public void updateComment(Long memberId, Long commentId, String content) {
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+
+        if(!comment.getMember().getId().equals(memberId)){
+            throw new IllegalStateException("댓글 수정 권한이 없습니다.");
+        }
 
         comment.changeCommentInfo(content);
     }
 
     // 댓글 삭제
     @Transactional
-    public void deleteComment(Long commendId) {
+    public void deleteComment(Long memberId, Long commentId) {
         Comment comment = commentRepository
-                .findById(commendId)
+                .findById(commentId)
                 .orElseThrow(() -> new IllegalStateException("존재하지 않는 댓글입니다."));
+
+        if(!comment.getMember().getId().equals(memberId)){
+            throw new IllegalStateException("댓글 삭제 권한이 없습니다.");
+        }
 
         comment.withdraw();
     }
