@@ -1,50 +1,42 @@
-# 📚 스터디 모집 및 커뮤니티 플랫폼 (StudyConnect)
-> **안전한 세션 관리와 인가(Authorization) 처리에 집중한 스터디 매칭 플랫폼**
+# 📚 Study Community Platform
+> **"스터디 개설부터 지원, 정원 관리 및 마감까지 하나의 완벽한 사이클을 제공하는 스터디 매칭 플랫폼"**
 
-## 1. 프로젝트 소개
-- **개발 인원:** 1인 (개인 프로젝트)
-- **핵심 목표:** 단순히 빠르게 기능을 찍어내는 것이 아니라, 백엔드 프레임워크(Spring Boot)의 동작 원리를 이해하고 **비정상적인 접근 방어 및 웹 서비스의 안정성 확보**에 초점을 맞추어 개발했습니다.
+## 💡 프로젝트 소개
+단순한 게시판 형태를 넘어, 비즈니스 로직의 정합성과 예외 처리에 집중한 백엔드 API 서버입니다.
+객체지향적인 도메인 설계와 JPA의 영속성 컨텍스트 생명주기를 깊이 이해하고, 실무에서 발생할 수 있는 데이터 무결성 문제 및 인가(Authorization) 보안 취약점을 선제적으로 방어하는 데 주안점을 두었습니다.
 
-## 2. 사용 기술 (Tech Stack)
-- **Backend:** Java 21, Spring Boot, Spring Data JPA
-- **Frontend:** HTML, CSS, Thymeleaf, Bootstrap
-- **Database:** H2 Database (개발용)
-- **Tool:** Gradle, Git, GitHub
+## 🛠 기술 스택
+- **Language:** Java 21
+- **Framework:** Spring Boot 4.x
+- **Data:** Spring Data JPA, MySQL
+- **Template Engine:** Thymeleaf
+- **Build Tool:** Gradle
 
-## 3. 핵심 기능 (Core Features)
-- **회원 인증 (Authentication):
-  - Spring Interceptor를 활용하여 전역적인 로그인 접근 제어
-  - 커스텀 `@Login` 애노테이션(ArgumentResolver)을 구현하여 세션 정보의 안전하고 편리한 조회
-- **스터디 모집 및 관리:** 스터디 개설, 상세 조회, 수정, 삭제 기능 구현
-- **신청자 관리 프로세스:**
-  - 지원자: 스터디 지원 및 취소 기능
-  - 스터디장: 지원자 목록 조회 및 상태 변경 (승인/거절) 기능
-- **게시판 (Post & Comment):** 커뮤니티 소통을 위한 게시글 및 댓글 기능 -> 추후 업데이트
+## 🚀 핵심 기능 (Core Features)
+- **스터디 모집 및 정원(Capacity) 관리 시스템:**
+  - 스터디 방장의 승인/거절 권한(Authorization) 로직 구현
+  - 동시성 및 데이터 정합성을 고려하여 승인 시 정원 초과를 방어하는 비즈니스 로직 적용
+  - 정원 충족 시 스터디 모집 상태 자동 마감(`CLOSED`) 처리
+- **안전하고 유연한 데이터 관리 정책:**
+  - 애플리케이션 레벨의 중복 신청 검증 로직 구현 (과거 취소 이력이 있어도 재신청 가능하도록 DB 복합 유니크 제약조건 제거 및 구조 개선)
+  - 외래키(FK) 참조 무결성 유지를 위해 스터디 및 댓글 도메인에 논리적 삭제(Soft Delete / `@SQLRestriction`) 일괄 적용
+- **보안 및 예외 방어:**
+  - 비로그인 사용자의 비정상적 URL 접근 시 발생하는 `NullPointerException(NPE)` 방어 로직 구축
+  - 엔티티 생명주기(Lifecycle Callback)를 활용한 `createdAt` 누락(Not-Null Constraint) 에러 방지
 
-## 4. 💡 트러블슈팅 및 핵심 고민 (Trouble Shooting)
-> 기능을 구현하며 마주친 예외 상황과 스프링/JPA의 동작 원리를 이해하며 해결한 과정입니다.
+## 🔥 트러블슈팅 및 기술적 의사결정
+> 기능 구현에 그치지 않고, 프레임워크의 동작 원리를 파악하여 논리적 버그와 잠재적 장애 요소를 해결한 과정입니다. (제목 클릭 시 상세 문서로 이동)
 
-### 🔴 Issue 1: 비로그인 사용자의 접근으로 인한 서버 에러(NullPointerException) 방어
-- **상황:** 스터디 상세 페이지 조회 시, 로그인한 사용자의 '신청 여부'를 UI에 반영하기 위해 세션에서 회원 객체를 가져오는 로직을 구현함.
-- **문제:** 로그인하지 않은 게스트 사용자가 상세 페이지의 URL을 직접 치고 들어올 경우, 세션에서 꺼내온 `loginMember` 객체가 `null`이 되어 `NullPointerException(NPE)`이 발생하며 서버가 다운되는 치명적 오류 발견.
-- **해결:** 컨트롤러에서 객체를 조회하기 전 `if (loginMember != null)` 조건문을 통해 세션의 존재 여부를 1차로 검증하는 방어 로직을 추가하여, 비로그인 사용자에게도 서버 에러 없이 정상적으로 화면이 렌더링되도록 안정성을 확보함.
+| 이슈 및 고민                                                                                                    | 해결 방안 및 배운 점                                                                                                                                              |
+|:-----------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **[비로그인 사용자 NPE(NullPointerException) 방어](./docs/troubleshooting/npe-guest-access.md)**                    | 세션 데이터 의존 로직에 방어적 프로그래밍(Null Check)을 도입하여 예외적 URL 직접 입력 시 발생하는 서버 다운 예외 처리를 누락한 문제를 해결하고 안정성을 확보함.                                                        |
+| **[API 강제 호출을 통한 권한 우회 차단](./docs/troubleshooting/prevent-api-authorization-bypass.md)**                   | 프론트엔드의 화면 숨김 처리에 의존하지 않고, Controller 계층에서 세션 ID와 리소스 소유자 ID를 직접 비교하여 불일치 시 접근을 원천 차단하는 인가(Authorization) 검증 로직을 추가함.                                      |
+| **[스터디 신청 취소 후 재신청 불가 버그 해결](./docs/troubleshooting/reapply-after-cancel-bug.md)**                         | DB 단의 복합 유니크 키 제약조건을 제거하고, 상태 값(PENDING, APPROVED) 기반의 유효한 신청 건에 대해서만 중복 신청으로 간주하도록 애플리케이션 레벨의 로직으로 이관하여 비즈니스 유연성을 확보함.                                   |
+| **[회원 정보 수정 시 '본인 데이터' 중복 검증 오류 해결](./docs/troubleshooting/self-data-validation-bug.md)**                  | 생성(Create)과 수정(Update) 시의 검증 맥락 차이를 분리하여 본인 데이터는 제외하고 검증하도록 방어 로직을 추가하고, Spring Data JPA의 `existsBy`를 활용하여 불필요한 엔티티 조회를 막아 쿼리 성능을 최적화함.                   |
+| **[TestDataInit 빈 생성 주기와 Transactional 충돌 해결](./docs/troubleshooting/test-data-init-failed.md)** | `@PostConstruct`와 AOP 기반 프록시 트랜잭션의 초기화 시점 차이를 분석하여, 컨텍스트가 완전히 초기화된 후 실행되는 `@EventListener(ApplicationReadyEvent.class)`를 활용하여 안전한 데이터 저장 환경을 구축함.         |
+| **[Member createdAt null 예외 해결](./docs/troubleshooting/member-created-at-null.md)**                        | DB 스키마 제약조건(`not-null`)에만 의존하지 않고, JPA 라이프사이클 콜백(`@PrePersist`, `@PreUpdate`)을 활용하여 엔티티 저장 및 수정 시점에 시간 컬럼이 자동으로 초기화되도록 개선함.                               |
 
-### 🔴 Issue 2: API 강제 호출을 통한 권한 우회 및 타인 데이터 조작 방지 (인가 처리)
-- **상황:** 스터디장만이 지원자의 신청 상태를 변경(승인/거절)할 수 있도록 HTML 화면 단위에서만 버튼을 숨김 처리함.
-- **문제:** 누군가 Postman 등의 툴을 이용해 API를 강제로 호출하면, 본인이 스터디장이 아님에도 남의 스터디 신청 내역을 임의로 조작할 수 있는 심각한 인가(Authorization) 취약점을 발견함.
-- **해결:** 화면 단 처리를 넘어 **비즈니스 로직(Controller) 단계에서 권한 검증 계층을 추가**. 현재 접근한 사용자의 ID와 스터디장의 ID를 직접 비교하여, 불일치할 경우 접근을 차단하도록 보안을 개선함.
-
-### 🔴 Issue 3: 데이터 저장 시 시간 컬럼 누락에 따른 Not-Null 예외 해결 (JPA 라이프사이클)
-- **상황:** `MemberService.join()` 테스트 실행 중 `createdAt` 컬럼이 `null`이라는 예외가 발생함.
-- **문제:** `Member` 엔티티의 시간 컬럼이 `nullable = false`로 설정되어 있었으나, 객체 생성 시점(DB 저장 전)에 해당 값이 초기화되지 않아 데이터베이스의 제약 조건을 위반함.
-- **해결:** 서비스 로직에서 매번 시간을 입력하는 대신, **JPA 라이프사이클 콜백**을 도입하여 엔티티가 영속화(저장 및 수정)되는 시점에 시간 데이터가 자동으로 초기화되도록 일괄 개선함.
-
-### 🔴 Issue 4: 초기 테스트 데이터 저장 실패 (스프링 생명주기와 트랜잭션 이해)
-- **상황:** 애플리케이션 실행 시 초기 테스트 데이터를 DB에 넣기 위해 `TestDataInit`을 구현함.
-- **문제:** `@PostConstruct`를 사용하여 데이터를 저장하려 했으나, 해당 시점에는 **스프링의 AOP 기반 트랜잭션(`@Transactional`)이 완전히 적용되지 않아** 영속성 컨텍스트가 정상적으로 작동하지 않는 문제 발생.
-- **해결:** 스프링 컨텍스트가 완전히 초기화된 이후 실행되는 **`@EventListener(ApplicationReadyEvent.class)`**로 방식을 변경하여 안정적인 트랜잭션 환경 내에서 데이터가 저장되도록 개선함.
-
-## 5. 프로젝트 문서 (Docs)
-- [요구사항 명세서 및 논리/물리 모델링 세부 내용 보기](./docs)
+## 📂 ERD (Entity Relationship Diagram)
+- [요구사항 명세서 및 논리/물리 모델링 세부 내용 보기](./docs/04-physical-model.md)
 - **ERD (Entity Relationship Diagram)**
   <img src="./docs/erd/ERD_v3.png" width="800">
