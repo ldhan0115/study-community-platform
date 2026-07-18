@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+*.log
+*.mv.db
+*.trace.db
+
+application-local.yml
+.env

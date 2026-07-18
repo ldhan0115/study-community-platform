@@ -6,6 +6,7 @@ import com.study.study_community_platform.repository.StudyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class ApplicationServiceTest {
 
     @Autowired ApplicationService applicationService;
@@ -24,7 +26,7 @@ class ApplicationServiceTest {
     @Test
     void applyToStudy(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
@@ -43,7 +45,7 @@ class ApplicationServiceTest {
     @Test
     void closeStudyApplication(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
@@ -60,27 +62,32 @@ class ApplicationServiceTest {
     @Test
     void fullCapacity(){
         // given
-        Member member1 = new Member("test1", "1234", "test1@gmail.com", "tester1");
-        Member member2 = new Member("test2", "1234", "test2@gmail.com", "tester2");
+        Member member1 = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
+        Member member2 = Member.createMember("test2", "1234", "test2@gmail.com", "tester2");
+        Member member3 = Member.createMember("test3", "1234", "test3@gmail.com", "tester3");
         memberRepository.save(member1);
         memberRepository.save(member2);
+        memberRepository.save(member3);
 
         Study study = Study.createStudy(member1, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 1);
         studyRepository.save(study);
 
-        applicationService.applyToStudy(member1.getId(), study.getId(), "열심히 하겠습니다.");
+        Long application1 = applicationService.applyToStudy(member2.getId(), study.getId(), "열심히 하겠습니다.");
+        Long application2 = applicationService.applyToStudy(member3.getId(), study.getId(), "열심히 하겠습니당.");
+
+        applicationService.approveApplication(application1);
 
         //when
-        assertThatThrownBy(() -> applicationService.applyToStudy(member2.getId(), study.getId(), "저도 열심히 할게요"))
+        assertThatThrownBy(() -> applicationService.approveApplication(application2))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("스터디 정원이 가득 찼습니다.");
+                .hasMessage("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
 
     }
 
     @Test
     void sameApplication(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
@@ -91,14 +98,14 @@ class ApplicationServiceTest {
         //when
         assertThatThrownBy(() -> applicationService.applyToStudy(member.getId(), study.getId(), "또 왔어요"))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("이미 신청한 스터디입니다.");
+                .hasMessage("신청 대기 중이거나 이미 승인된 스터디입니다.");
     }
 
     @Test
     void findApplicationByStudy(){
         // given
-        Member member1 = new Member("test1", "1234", "test1@gmail.com", "tester1");
-        Member member2 = new Member("test2", "1234", "test2@gmail.com", "tester2");
+        Member member1 = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
+        Member member2 = Member.createMember("test2", "1234", "test2@gmail.com", "tester2");
         memberRepository.save(member1);
         memberRepository.save(member2);
 
@@ -122,7 +129,7 @@ class ApplicationServiceTest {
     @Test
     void findApplicationsByMember(){
         // given
-        Member member = new Member("test1", "1234", "test1@gmail.com", "tester1");
+        Member member = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
         memberRepository.save(member);
 
         Study study1 = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
@@ -148,7 +155,7 @@ class ApplicationServiceTest {
     @Test
     void changeApplicationStatus(){
         // given
-        Member member = new Member("test1", "1234", "test1@gmail.com", "tester1");
+        Member member = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
         memberRepository.save(member);
 
         Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);

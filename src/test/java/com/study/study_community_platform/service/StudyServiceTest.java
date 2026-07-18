@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class StudyServiceTest {
 
     @Autowired StudyService studyService;
@@ -25,7 +27,7 @@ class StudyServiceTest {
     @Test
     void createStudy(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         //when
@@ -51,7 +53,7 @@ class StudyServiceTest {
     @Test
     void noTitle(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         //when&then
@@ -65,20 +67,20 @@ class StudyServiceTest {
     @Test
     void capacityException(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         //when&then
         assertThatThrownBy(() -> studyService.registerStudy(member.getId(), "JPA",
                 "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 0))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("정원은 1명 이상이어야 합니다.");
+                .hasMessage("모집 인원은 1명 이상이어야 합니다.");
     }
 
     @Test
     void findStudies(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         Long studyId1 = studyService.registerStudy(member.getId(), "JPA",
@@ -101,7 +103,7 @@ class StudyServiceTest {
     @Test
     void updateStudy(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         Long studyId = studyService.registerStudy(member.getId(), "JPA",
@@ -125,7 +127,7 @@ class StudyServiceTest {
     @Test
     void closeStudy(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         Long studyId = studyService.registerStudy(member.getId(), "JPA",
@@ -142,7 +144,7 @@ class StudyServiceTest {
     @Test
     void deleteStudy(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
 
         Long studyId1 = studyService.registerStudy(member.getId(), "JPA",
