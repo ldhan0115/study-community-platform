@@ -31,7 +31,7 @@ public class CommentService {
 
         // 댓글 작성 스터디 존재 여부 확인
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시물입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
 
         // Comment 객체 생성 메서드를 사용
         Comment comment = Comment.createComment(member, study, content);

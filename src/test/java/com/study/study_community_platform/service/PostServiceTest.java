@@ -6,6 +6,7 @@ import com.study.study_community_platform.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class PostServiceTest {
 
     @Autowired PostService postService;
@@ -23,7 +25,7 @@ class PostServiceTest {
     @Test
     void registerPost(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         //when
@@ -39,7 +41,7 @@ class PostServiceTest {
     @Test
     void noTitle(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         //when && then
@@ -51,7 +53,7 @@ class PostServiceTest {
     @Test
     void findPostsByMember(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Long postId1 = postService.registerPost(member.getId(), "오늘 공부한 영어 문장 1", "I'm a student");
@@ -70,7 +72,7 @@ class PostServiceTest {
     @Test
     void findPosts(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Long postId1 = postService.registerPost(member.getId(), "오늘 공부한 영어 문장 1", "I'm a student");
@@ -89,7 +91,7 @@ class PostServiceTest {
     @Test
     void updatePost(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Long postId = postService.registerPost(member.getId(), "오늘 공부한 영어 문장", "I'm a students");
@@ -107,7 +109,7 @@ class PostServiceTest {
     @Test
     void deletePost(){
         // given
-        Member member = new Member("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Long postId1 = postService.registerPost(member.getId(), "오늘 공부한 영어 문장 1", "I'm a student");
