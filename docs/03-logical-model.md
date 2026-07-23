@@ -57,45 +57,21 @@
 | created_at | DATETIME |  | 생성일 |
 | updated_at | DATETIME |  | 수정일 |
 
-
-추가 제약
-
-: UNIQUE(member_id, study_id)
-
--> 동일 회원이 동일 스터디에 **중복 신청할 수 없음**
-
 ---
 
-# 4. Post 테이블
+# 4. Comment 테이블
 
-커뮤니티 게시글을 저장하는 테이블
+스터디 댓글을 저장하는 테이블
 
-| 컬럼 | 타입 | 제약조건 | 설명 |
-|----|----|----|----|
-| post_id | BIGINT | PK | 게시글 식별자 |
-| member_id | BIGINT | FK | 작성 회원 |
-| post_title | VARCHAR(255) | NOT NULL | 제목 |
-| post_content | TEXT | NULL | 내용 |
-| created_at | DATETIME |  | 작성일 |
-| updated_at | DATETIME |  | 수정일 |
-| deleted_at | DATETIME | NULL | 삭제일 |
-
-
----
-
-# 5. Comment 테이블
-
-게시글 댓글을 저장하는 테이블
-
-| 컬럼 | 타입 | 제약조건 | 설명 |
-|----|----|----|----|
-| comment_id | BIGINT | PK | 댓글 식별자 |
-| post_id | BIGINT | FK | 게시글 |
-| member_id | BIGINT | FK | 작성 회원 |
-| comment_content | TEXT | NULL | 댓글 내용 |
-| created_at | DATETIME |  | 작성일 |
-| updated_at | DATETIME |  | 수정일 |
-| deleted_at | DATETIME | NULL | 삭제일 |
+| 컬럼              | 타입 | 제약조건 | 설명     |
+|-----------------|----|----|--------|
+| comment_id      | BIGINT | PK | 댓글 식별자 |
+| study_id        | BIGINT | FK | 스터디    |
+| member_id       | BIGINT | FK | 작성 회원  |
+| comment_content | TEXT | NULL | 댓글 내용  |
+| created_at      | DATETIME |  | 작성일    |
+| updated_at      | DATETIME |  | 수정일    |
+| deleted_at      | DATETIME | NULL | 삭제일    |
 
 ---
 

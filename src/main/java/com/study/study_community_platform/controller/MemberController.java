@@ -113,9 +113,6 @@ public class MemberController {
 
         EditMemberForm form = new EditMemberForm();
 
-        // 정보 수정할 회원객체 ID 담아서 보냄
-        form.setMemberId(loginMember.getId());
-
         // 수정 폼 진입 시 기존 데이터가 화면에 보이도록 세팅
         form.setLoginId(loginMember.getLoginId());
         form.setEmail(loginMember.getEmail());
@@ -126,9 +123,11 @@ public class MemberController {
     }
 
     // 회원정보 수정
+    // 대상 회원 ID를 브라우저가 보내는 값이 아닌 서버의 로그인 정보에서 가져오는 것으로 수정
     @PostMapping("/edit")
     public String edit(@Validated @ModelAttribute("member") EditMemberForm form,
                        BindingResult bindingResult,
+                       @Login Member loginMember,
                        HttpServletRequest request){
 
         // 필드 검증 실패 시 수정 화면 다시 이동
@@ -139,7 +138,7 @@ public class MemberController {
         Member editedMember = Member.createMember(form.getLoginId(), form.getPassword(),
                 form.getEmail(), form.getNickname());
 
-        memberService.editMember(form.getMemberId(), editedMember);
+        memberService.editMember(loginMember.getId(), editedMember);
 
         // 정보 수정 완료 후 변경된 정보가 화면에 반영되도록 세션 정보 갱신
         HttpSession session = request.getSession();
