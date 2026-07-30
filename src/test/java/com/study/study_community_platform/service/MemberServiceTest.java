@@ -1,9 +1,11 @@
 package com.study.study_community_platform.service;
 
+import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,71 +20,76 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class MemberServiceTest {
 
     @Autowired MemberService memberService;
+    @Autowired PasswordEncoder passwordEncoder;
 
     @Test
     void join(){
         // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
+        JoinMemberForm form = new JoinMemberForm("test", "1234", "test@gmail.com", "tester");
 
         // when
-        Long joinedId = memberService.join(member);
+        Long joinedId = memberService.join(form);
         Member findMember = memberService.findMember(joinedId);
 
         // then
         // 회원 가입 후 조회한 회원이 동일한지 검증
-        assertThat(findMember).isEqualTo(member);
+        assertThat(findMember.getLoginId()).isEqualTo(form.getLoginId());
+        assertThat(passwordEncoder.matches(form.getPassword(), findMember.getPassword())).isTrue();
     }
 
     @Test
     void validateDuplicateLoginId(){
         // given
-        Member member1 = Member.createMember("test", "1234", "test1@gmail.com", "tester1");
-        Member member2 = Member.createMember("test", "1234", "test2@gmail.com", "tester2");
+        JoinMemberForm form1 = new JoinMemberForm("test", "1234", "test1@gmail.com", "tester1");
+        JoinMemberForm form2 = new JoinMemberForm("test", "1234", "test2@gmail.com", "tester2");
 
-        memberService.join(member1);
+        memberService.join(form1);
 
         // when & then
         // 동일한 loginId로 가입 시 예외가 발생해야 함
-        assertThatThrownBy(() -> memberService.join(member2))
+        assertThatThrownBy(() -> memberService.join(form2))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void validateDuplicateEmail(){
         // given
-        Member member1 = Member.createMember("test1", "1234", "test@gmail.com", "tester1");
-        Member member2 = Member.createMember("test2", "1234", "test@gmail.com", "tester2");
+        JoinMemberForm form1 = new JoinMemberForm("test1", "1234", "test@gmail.com", "tester1");
+        JoinMemberForm form2 = new JoinMemberForm("test2", "1234", "test@gmail.com", "tester2");
 
-        memberService.join(member1);
+        memberService.join(form1);
 
         // when & then
         // 동일한 email로 가입 시 예외가 발생해야 함
-        assertThatThrownBy(() -> memberService.join(member2))
+        assertThatThrownBy(() -> memberService.join(form2))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void validateDuplicateNickname(){
         // given
-        Member member1 = Member.createMember("1test", "1234", "test1@gmail.com", "tester");
-        Member member2 = Member.createMember("2test", "1234", "test2@gmail.com", "tester");
+        JoinMemberForm form1 = new JoinMemberForm("test1", "1234", "test1@gmail.com", "tester");
+        JoinMemberForm form2 = new JoinMemberForm("test2", "1234", "test2@gmail.com", "tester");
 
-        memberService.join(member1);
+        memberService.join(form1);
 
         // when & then
         // 동일한 nickname으로 가입 시 예외가 발생해야 함
-        assertThatThrownBy(() -> memberService.join(member2))
+        assertThatThrownBy(() -> memberService.join(form2))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void findMembers(){
         // given
-        Member member1 = Member.createMember("1test", "1234", "test1@gmail.com", "tester1");
-        Member member2 = Member.createMember("2test", "1234", "test2@gmail.com", "tester2");
+        JoinMemberForm form1 = new JoinMemberForm("test1", "1234", "test1@gmail.com", "tester1");
+        JoinMemberForm form2 = new JoinMemberForm("test2", "1234", "test2@gmail.com", "tester2");
 
-        memberService.join(member1);
-        memberService.join(member2);
+        Long joinedId1 = memberService.join(form1);
+        Long joinedId2 = memberService.join(form2);
+
+        Member findMember1 = memberService.findMember(joinedId1);
+        Member findMember2 = memberService.findMember(joinedId2);
 
         // when
         List<Member> members = memberService.findMembers();
@@ -90,6 +97,6 @@ class MemberServiceTest {
         // then
         // 전체 회원 수와 포함 여부 검증
         assertThat(members.size()).isEqualTo(2);
-        assertThat(members).contains(member1, member2);
+        assertThat(members).contains(findMember1, findMember2);
     }
 }

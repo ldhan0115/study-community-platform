@@ -14,7 +14,7 @@ public class JoinMemberForm {
     private String loginId;
 
     @NotBlank(message = "비밀번호는 필수입니다.")
-    @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하여야 합니다.")
+    @Size(min = 8, max = 30, message = "비밀번호는 8자 이상 20자 이하여야 합니다.")
     private String password;
 
     @NotBlank(message = "이메일은 필수입니다.")
@@ -25,5 +25,12 @@ public class JoinMemberForm {
     @Size(min = 2, max = 20, message = "닉네임은 2자 이상 20자 이하여야 합니다.")
     private String nickname;
 
+    public JoinMemberForm() {}
 
+    public JoinMemberForm(String loginId, String password, String email, String nickname) {
+        this.loginId = loginId;
+        this.password = password;
+        this.email = email;
+        this.nickname = nickname;
+    }
 }

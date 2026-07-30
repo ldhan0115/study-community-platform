@@ -1,4 +1,4 @@
-package com.study.study_community_platform;
+package com.study.study_community_platform.config;
 
 import com.study.study_community_platform.controller.web.argumentresolver.LoginMemberArgumentResolver;
 import com.study.study_community_platform.controller.web.interceptor.LoginCheckInterceptor;
