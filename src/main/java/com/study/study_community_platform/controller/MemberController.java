@@ -41,11 +41,9 @@ public class MemberController {
             return "members/joinMemberForm";
         }
 
-        Member member = Member.createMember(form.getLoginId(), form.getPassword(), form.getEmail(), form.getNickname());
-
         // 중복 검사 예외 처리
         try{
-            memberService.join(member);
+            memberService.join(form);
         }catch(IllegalStateException e){
             // service 에서 던진 메시지를 잡아냄
             String errMessage = e.getMessage();

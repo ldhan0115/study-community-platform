@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class TestDataInit {
     private final StudyRepository studyRepository;
     private final CommentRepository commentRepository;
     private final ApplicationRepository applicationRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
@@ -44,42 +46,42 @@ public class TestDataInit {
          */
         Member member1 = Member.createMember(
                 "test1",
-                "test1234",
+                passwordEncoder.encode("test1234"),
                 "test1@example.com",
                 "김개발"
         );
 
         Member member2 = Member.createMember(
                 "test2",
-                "test1234",
+                passwordEncoder.encode("test1234"),
                 "test2@example.com",
                 "이자바"
         );
 
         Member member3 = Member.createMember(
                 "test3",
-                "test1234",
+                passwordEncoder.encode("test1234"),
                 "test3@example.com",
                 "박스프링"
         );
 
         Member member4 = Member.createMember(
                 "test4",
-                "test1234",
+                passwordEncoder.encode("test1234"),
                 "test4@example.com",
                 "최데이터"
         );
 
         Member member5 = Member.createMember(
                 "test5",
-                "test1234",
+                passwordEncoder.encode("test1234"),
                 "test5@example.com",
                 "정코딩"
         );
 
         Member member6 = Member.createMember(
                 "test6",
-                "test1234",
+                passwordEncoder.encode("test1234"),
                 "test6@example.com",
                 "한백엔드"
         );

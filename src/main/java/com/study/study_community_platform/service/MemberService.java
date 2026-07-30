@@ -1,13 +1,14 @@
 package com.study.study_community_platform.service;
 
+import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -15,10 +16,15 @@ import java.util.Optional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // 회원 가입
     @Transactional
-    public Long join(Member member){
+    public Long join(JoinMemberForm form){
+        // 입력받은 비밀번호 암호화해서 member 객체 생성
+        String encodedPassword = passwordEncoder.encode(form.getPassword());
+        Member member = Member.createMember(form.getLoginId(), encodedPassword, form.getEmail(), form.getNickname());
+
         // 회원가입 전에 loginId, email, nickname 중복 여부 검사
         validateDuplicateMember(member);
         memberRepository.save(member);
@@ -37,12 +43,12 @@ public class MemberService {
     }
 
     // 회원 로그인
-    public Member login(String loginId, String password){
+    public Member login(String loginId, String rawPassword){
 
         // loginId로 회원을 조회한 뒤 비밀번호가 일치하면 해당 회원 반환
         // Optional의 filter 사용
         return memberRepository.findByLoginId(loginId)
-                .filter(m -> m.getPassword().equals(password))
+                .filter(m -> passwordEncoder.matches(rawPassword, m.getPassword()))
                 .orElse(null);
     }
 
@@ -58,7 +64,7 @@ public class MemberService {
         validateDuplicateMemberForEdit(findMember ,memberParam);
 
         // 정보 수정 (도메인 내부에 위치)
-        findMember.changeMemberInfo(memberParam.getLoginId(), memberParam.getPassword(),
+        findMember.changeMemberInfo(memberParam.getLoginId(), passwordEncoder.encode(memberParam.getPassword()),
                 memberParam.getEmail(), memberParam.getNickname());
     }
 
