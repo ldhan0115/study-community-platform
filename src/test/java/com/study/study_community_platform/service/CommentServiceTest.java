@@ -2,7 +2,6 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.repository.MemberRepository;
-import com.study.study_community_platform.repository.PostRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
