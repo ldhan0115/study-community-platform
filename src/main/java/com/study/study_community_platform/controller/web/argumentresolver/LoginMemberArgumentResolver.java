@@ -1,6 +1,7 @@
 package com.study.study_community_platform.controller.web.argumentresolver;
 
 import com.study.study_community_platform.controller.web.SessionConst;
+import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,16 +17,21 @@ public class LoginMemberArgumentResolver implements HandlerMethodArgumentResolve
     public boolean supportsParameter(MethodParameter parameter) {
 
         boolean hasLoginAnnotation = parameter.hasParameterAnnotation(Login.class);
-        boolean hasMemberType = Member.class.isAssignableFrom(parameter.getParameterType());
+        boolean hasLoginMemberSessionType = LoginMemberSession.class.isAssignableFrom(parameter.getParameterType());
 
-        // Login 어노테이션이 붙어있는지 && Member 타입 객체인지 확인해 해당하는 객체만 지원
-        return hasLoginAnnotation && hasMemberType;
+        // @Login이 붙어 있고 LoginMemberSession 타입인 매개변수만 처리
+        return hasLoginAnnotation && hasLoginMemberSessionType;
     }
 
     @Override
-    public @Nullable Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer, NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
+    public @Nullable Object resolveArgument(MethodParameter parameter,
+                                            @Nullable ModelAndViewContainer mavContainer,
+                                            NativeWebRequest webRequest,
+                                            @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
         HttpServletRequest request = (HttpServletRequest)webRequest.getNativeRequest();
+
+        // 로그인 여부를 확인하는 과정에서는 새로운 세션 생성 x
         HttpSession session = request.getSession(false);
         if(session == null){
             // 세션 정보 없으면 널 반환

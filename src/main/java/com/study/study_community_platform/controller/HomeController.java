@@ -1,7 +1,7 @@
 package com.study.study_community_platform.controller;
 
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
-import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +11,7 @@ public class HomeController {
 
     @GetMapping("/")
     // argumentResolver를 통해 커스텀 애노테이션(@Login) 도입
-    public String home(@Login Member loginMember, Model model){
+    public String home(@Login LoginMemberSession loginMember, Model model){
 
         // 로그인 세션이 없으면 기본 홈 화면으로 이동
         if(loginMember == null){

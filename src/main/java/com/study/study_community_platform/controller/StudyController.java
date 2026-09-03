@@ -1,6 +1,7 @@
 package com.study.study_community_platform.controller;
 
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
+import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.controller.web.study.EditStudyForm;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
 import com.study.study_community_platform.domain.*;
@@ -40,7 +41,7 @@ public class StudyController {
 
     // 스터디 등록
     @PostMapping("/new")
-    public String register(@Login Member loginMember,
+    public String register(@Login LoginMemberSession loginMember,
                            @Validated @ModelAttribute("studyForm") RegisterStudyForm form,
                            BindingResult bindingResult){
 
@@ -53,7 +54,7 @@ public class StudyController {
             return "studies/registerStudyForm";
         }
 
-        studyService.registerStudy(loginMember.getId(), form.getTitle(), form.getContent(),
+        studyService.registerStudy(loginMember.id(), form.getTitle(), form.getContent(),
                 form.getMethod(), form.getRegion(), form.getCapacity());
 
         return "redirect:/studies";
@@ -71,7 +72,7 @@ public class StudyController {
     // 스터디 상세 조회
     @GetMapping("/{studyId}")
     public String detail(@PathVariable Long studyId,
-                         @Login Member loginMember,
+                         @Login LoginMemberSession loginMember,
                          Model model){
 
         model.addAttribute("study", studyService.findStudy(studyId));
@@ -79,7 +80,7 @@ public class StudyController {
         // 비로그인 사용자 NPE 방어
         boolean isApplied = false;
         if(loginMember != null){
-            isApplied = applicationService.isApplied(loginMember.getId(), studyId);
+            isApplied = applicationService.isApplied(loginMember.id(), studyId);
         }
 
         // 신청 여부 모델에 담아서 전달
@@ -95,14 +96,14 @@ public class StudyController {
     // 스터디 수정 폼 이동
     @GetMapping("/{studyId}/edit")
     public String editForm(@PathVariable Long studyId,
-                           @Login Member loginMember,
+                           @Login LoginMemberSession loginMember,
                            Model model){
 
         Study study = studyService.findStudy(studyId);
 
         // 현재 로그인한 사용자가 스터디 작성자인지 검증 (URL 직접 접근 차단)
-        if(!study.getMember().getId().equals(loginMember.getId())){
-            log.warn("권한 없는 사용자의 스터디 수정 접근 memberId={}, studyId={}", loginMember.getId(), study.getId());
+        if(!study.getMember().getId().equals(loginMember.id())){
+            log.warn("권한 없는 사용자의 스터디 수정 접근 memberId={}, studyId={}", loginMember.id(), study.getId());
             // 해당 스터디 조회 폼으로 이동
             return "redirect:/studies/" + studyId;
         }
@@ -124,13 +125,13 @@ public class StudyController {
     @PostMapping("/{studyId}/edit")
     public String edit(@Validated @ModelAttribute("editForm") EditStudyForm form,
                        BindingResult bindingResult,
-                       @Login Member loginMember,
+                       @Login LoginMemberSession loginMember,
                        @PathVariable Long studyId){
 
         Study study = studyService.findStudy(studyId);
 
         // API(Postman 등)를 통한 비정상적인 POST 수정 요청 차단
-        if (!study.getMember().getId().equals(loginMember.getId())) {
+        if (!study.getMember().getId().equals(loginMember.id())) {
             return "redirect:/studies/" + studyId;
         }
 
@@ -153,13 +154,13 @@ public class StudyController {
     @PostMapping("{studyId}/apply")
     public String applyForm(@RequestParam String message,
                             @PathVariable Long studyId,
-                            @Login Member loginMember,
+                            @Login LoginMemberSession loginMember,
                             RedirectAttributes redirectAttributes){
 
 
         // 신청 성공 여부에 따라 사용자에게 결과 보여줌
         try{
-            applicationService.applyToStudy(loginMember.getId(), studyId, message);
+            applicationService.applyToStudy(loginMember.id(), studyId, message);
             redirectAttributes.addFlashAttribute("successMessage", "스터디 신청이 완료되었습니다.");
         }catch(IllegalStateException e){
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -192,14 +193,14 @@ public class StudyController {
 
     // 스터디 삭제
     @PostMapping("/{studyId}/delete")
-    public String deleteStudy(@Login Member loginMember, @PathVariable Long studyId){
+    public String deleteStudy(@Login LoginMemberSession loginMember, @PathVariable Long studyId){
 
         Study study = studyService.findStudy(studyId);
 
-        if(study.getMember().getId().equals(loginMember.getId())){
+        if(study.getMember().getId().equals(loginMember.id())){
             studyService.deleteStudy(studyId);
         }else{
-            log.warn("권한 없는 사용자의 스터디 삭제 시도. memberId={}, studyId={}", loginMember.getId(), studyId);
+            log.warn("권한 없는 사용자의 스터디 삭제 시도. memberId={}, studyId={}", loginMember.id(), studyId);
         }
 
         return "redirect:/studies";
