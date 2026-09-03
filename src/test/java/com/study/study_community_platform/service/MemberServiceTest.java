@@ -2,6 +2,7 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,8 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -98,5 +98,34 @@ class MemberServiceTest {
         // 전체 회원 수와 포함 여부 검증
         assertThat(members.size()).isEqualTo(2);
         assertThat(members).contains(findMember1, findMember2);
+    }
+
+    @Test
+    void editMemberKeepsMemberIdAndEncodedPassword(){
+        // given
+        JoinMemberForm joinMemberForm = new JoinMemberForm(
+                "member1",
+                "password123",
+                "member1@gmail.com",
+                "nickname1"
+        );
+
+        Long memberId = memberService.join(joinMemberForm);
+
+        MemberUpdateDto memberUpdateDto = new MemberUpdateDto(
+                "member1",
+                "newPassword",
+                "member1@gmail.com",
+                "newNickname"
+        );
+
+        //when
+        Member updatedMember = memberService.editMember(memberId, memberUpdateDto);
+
+        //then
+        assertThat(updatedMember.getId()).isEqualTo(memberId);
+        assertThat(updatedMember.getNickname()).isEqualTo("newNickname");
+        assertThat(passwordEncoder.matches("newPassword", updatedMember.getPassword())).isTrue();
+        assertThat(updatedMember.getPassword()).isNotEqualTo("newPassword");
     }
 }

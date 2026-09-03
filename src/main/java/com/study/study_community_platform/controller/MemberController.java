@@ -5,8 +5,10 @@ import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.controller.web.member.LoginMemberForm;
 import com.study.study_community_platform.controller.web.SessionConst;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
+import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.service.MemberService;
+import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -87,17 +89,19 @@ public class MemberController {
         }
 
         // 아이디/비밀번호 일치하는 회원 반환
-        Member loginMember = memberService.login(form.getLoginId(), form.getPassword());
+        Member authenticatedMember = memberService.login(form.getLoginId(), form.getPassword());
 
         // 인증 실패 시 글로벌 에러 담아서 로그인 화면으로 이동
-        if(loginMember == null){
+        if(authenticatedMember == null){
             bindingResult.reject("loginFail", "아이디 또는 비밀번호가 일치하지 않습니다.");
             return "members/loginMemberForm";
         }
 
-        // 인증 성공 시 세션 생성하고 회원 정보 저장
         HttpSession session = request.getSession();
-        session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
+
+        // Member 엔티티 전체가 아닌 인증과 화면 표시에 필요한 최소 정보만 세션에 저장
+        LoginMemberSession loginMemberSession = LoginMemberSession.from(authenticatedMember);
+        session.setAttribute(SessionConst.LOGIN_MEMBER, loginMemberSession);
 
         // 로그인 하기 전 주소로 이동
         return "redirect:" + redirectURL;
@@ -106,15 +110,17 @@ public class MemberController {
 
     // 회원 정보 수정 폼으로 이동
     @GetMapping("/edit")
-    // 기존에 구현한 @Login 애노테이션 활용해서 로그인된 멤버 주입
-    public String editForm(@Login Member loginMember, Model model){
+    // @Login 애노테이션 활용
+    // 기존 로그인된 Member 객체를 받는 것에서 필요한 데이터만 저장해놓은 DTO를 받아 활용하는 것으로 수정
+    public String editForm(@Login LoginMemberSession loginMember, Model model){
 
         EditMemberForm form = new EditMemberForm();
 
-        // 수정 폼 진입 시 기존 데이터가 화면에 보이도록 세팅
-        form.setLoginId(loginMember.getLoginId());
-        form.setEmail(loginMember.getEmail());
-        form.setNickname(loginMember.getNickname());
+        // 세션에는 최소 정보만 존재하므로 회원 수정 화면에 필요한 데이터는 DB에서 최신 상태로 다시 조회해서 대입
+        Member member = memberService.findMember(loginMember.id());
+        form.setLoginId(member.getLoginId());
+        form.setEmail(member.getEmail());
+        form.setNickname(member.getNickname());
 
         model.addAttribute("member", form);
         return "members/editMemberForm";
@@ -125,7 +131,7 @@ public class MemberController {
     @PostMapping("/edit")
     public String edit(@Validated @ModelAttribute("member") EditMemberForm form,
                        BindingResult bindingResult,
-                       @Login Member loginMember,
+                       @Login LoginMemberSession loginMember,
                        HttpServletRequest request){
 
         // 필드 검증 실패 시 수정 화면 다시 이동
@@ -133,14 +139,25 @@ public class MemberController {
             return "members/editMemberForm";
         }
 
-        Member editedMember = Member.createMember(form.getLoginId(), form.getPassword(),
-                form.getEmail(), form.getNickname());
+        // 사용자의 입력을 받은 form을 직접 전달 x
+        // 회원 수정에 필요한 데이터 DTO로 변환해서 전달
+        MemberUpdateDto memberUpdateDto =
+                new MemberUpdateDto(
+                    form.getLoginId(), form.getPassword(),
+                    form.getEmail(), form.getNickname()
+                );
 
-        memberService.editMember(loginMember.getId(), editedMember);
+        Member updatedMember = memberService.editMember(loginMember.id(), memberUpdateDto);
 
         // 정보 수정 완료 후 변경된 정보가 화면에 반영되도록 세션 정보 갱신
         HttpSession session = request.getSession();
-        session.setAttribute(SessionConst.LOGIN_MEMBER, editedMember);
+        if(session == null){
+            throw new IllegalStateException("로그인 세션이 존재하지 않습니다.");
+        }
+
+
+        // 기존 비영속 객체를 세션에 저장한 것에서 DB에서 조회하여 수정한 영속 회원을 저장하여 id가 null이 되는 문제 해결
+        session.setAttribute(SessionConst.LOGIN_MEMBER, LoginMemberSession.from(updatedMember));
         return "redirect:/";
 
     }
@@ -161,9 +178,9 @@ public class MemberController {
 
     // 회원 탈퇴
     @PostMapping("/withdraw")
-    public String withdraw(@Login Member loginMember, HttpServletRequest request){
+    public String withdraw(@Login LoginMemberSession loginMember, HttpServletRequest request){
 
-        memberService.withdrawMember(loginMember.getId());
+        memberService.withdrawMember(loginMember.id());
 
         HttpSession session = request.getSession(false);
         if(session != null){

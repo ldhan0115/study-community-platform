@@ -3,6 +3,7 @@ package com.study.study_community_platform.service;
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.repository.MemberRepository;
+import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -54,18 +55,26 @@ public class MemberService {
 
     // 회원 정보 수정
     @Transactional
-    public void editMember(Long memberId, Member memberParam){
+    public Member editMember(Long memberId, MemberUpdateDto updateDto){
 
         // 수정할 회원 조회
         Member findMember = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
 
         // 수정할 정보 중복 검사
-        validateDuplicateMemberForEdit(findMember ,memberParam);
+        validateDuplicateMemberForEdit(findMember ,updateDto);
 
         // 정보 수정 (도메인 내부에 위치)
-        findMember.changeMemberInfo(memberParam.getLoginId(), passwordEncoder.encode(memberParam.getPassword()),
-                memberParam.getEmail(), memberParam.getNickname());
+        // 비밀번호는 평문 그대로 저장하지 않고 PasswordEncoder로 암호화한 후 저장
+        findMember.changeMemberInfo(
+                updateDto.loginId(),
+                passwordEncoder.encode(updateDto.password()),
+                updateDto.email(),
+                updateDto.nickname()
+        );
+
+        // Controller에서 수정된 영속 엔티티로 세션을 갱신하도록 반환
+        return findMember;
     }
 
     // 회원 탈퇴
@@ -94,19 +103,19 @@ public class MemberService {
 
     // 정보 수정용 중복 검사
     // 기존 회원의 정보와 폼에서 넘어온 새로운 정보가 다를 경우에만 중복 검사를 실행하도록 방어 로직 추가
-    private void validateDuplicateMemberForEdit(Member findMember, Member memberParam){
-        if(!findMember.getLoginId().equals(memberParam.getLoginId())
-            && memberRepository.existsByLoginId(memberParam.getLoginId())){
+    private void validateDuplicateMemberForEdit(Member findMember, MemberUpdateDto updateDto){
+        if(!findMember.getLoginId().equals(updateDto.loginId())
+            && memberRepository.existsByLoginId(updateDto.loginId())){
             throw new IllegalStateException(("동일한 ID가 존재합니다."));
         }
 
-        if(!findMember.getEmail().equals(memberParam.getEmail())
-                && memberRepository.existsByEmail(memberParam.getEmail())){
+        if(!findMember.getEmail().equals(updateDto.email())
+                && memberRepository.existsByEmail(updateDto.email())){
             throw new IllegalStateException("동일한 EMAIL이 존재합니다.");
         }
 
-        if(!findMember.getNickname().equals(memberParam.getNickname())
-                && memberRepository.existsByNickname(memberParam.getNickname())){
+        if(!findMember.getNickname().equals(updateDto.nickname())
+                && memberRepository.existsByNickname(updateDto.nickname())){
             throw new IllegalStateException("동일한 NICKNAME이 존재합니다.");
         }
     }

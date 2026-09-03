@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@Profile("!test")
 @RequiredArgsConstructor
 public class TestDataInit {
 

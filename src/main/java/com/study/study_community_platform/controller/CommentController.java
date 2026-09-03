@@ -1,6 +1,7 @@
 package com.study.study_community_platform.controller;
 
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
+import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -19,27 +20,27 @@ public class CommentController {
 
     // 댓글 작성
     @PostMapping("/studies/{studyId}/comments")
-    public String addComment(@Login Member loginMember,
+    public String addComment(@Login LoginMemberSession loginMember,
                              @PathVariable Long studyId,
                              @RequestParam String content){
 
         // 등록 후 스터디 상세 페이지로 이동
-        commentService.registerComment(loginMember.getId(), studyId, content);
+        commentService.registerComment(loginMember.id(), studyId, content);
         return "redirect:/studies/" + studyId;
     }
 
     // 댓글 수정
     @PostMapping("/studies/{studyId}/comments/{commentId}/edit")
-    public String editComment(@Login Member loginMember,
+    public String editComment(@Login LoginMemberSession loginMember,
                               @PathVariable Long studyId,
                               @PathVariable Long commentId,
                               @RequestParam String content){
 
         // 내가 쓴 댓글 일때만 수정
         try{
-            commentService.updateComment(loginMember.getId(), commentId, content);
+            commentService.updateComment(loginMember.id(), commentId, content);
         }catch(IllegalStateException e){
-            log.warn("권한 없는 사용자의 댓글 수정 시도. memberId={}, commentId={}", loginMember.getId(), commentId);
+            log.warn("권한 없는 사용자의 댓글 수정 시도. memberId={}, commentId={}", loginMember.id(), commentId);
         }
 
         return "redirect:/studies/" + studyId;
@@ -47,15 +48,15 @@ public class CommentController {
 
     // 댓글 삭제
     @PostMapping("/studies/{studyId}/comments/{commentId}/delete")
-    public String deleteComment(@Login Member loginMember,
+    public String deleteComment(@Login LoginMemberSession loginMember,
                                 @PathVariable Long studyId,
                                 @PathVariable Long commentId){
 
         // 내가 쓴 댓글 일때만 삭제
         try{
-            commentService.deleteComment(loginMember.getId(), commentId);
+            commentService.deleteComment(loginMember.id(), commentId);
         }catch(IllegalStateException e){
-            log.warn("권한 없는 사용자의 댓글 삭제 시도. memberId={}, commentId={}", loginMember.getId(), commentId);
+            log.warn("권한 없는 사용자의 댓글 삭제 시도. memberId={}, commentId={}", loginMember.id(), commentId);
         }
 
         return "redirect:/studies/"+studyId;
