@@ -7,10 +7,10 @@ import com.study.study_community_platform.controller.web.session.LoginMemberSess
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.service.MemberService;
 import jakarta.servlet.http.HttpSession;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-@ActiveProfiles("test")
+@Profile("test")
 public class MemberControllerTest {
 
     @Autowired MemberController memberController;

@@ -99,12 +99,14 @@ public class StudyController {
                            @Login LoginMemberSession loginMember,
                            Model model){
 
-        Study study = studyService.findStudy(studyId);
+        Study study;
 
-        // 현재 로그인한 사용자가 스터디 작성자인지 검증 (URL 직접 접근 차단)
-        if(!study.getMember().getId().equals(loginMember.id())){
-            log.warn("권한 없는 사용자의 스터디 수정 접근 memberId={}, studyId={}", loginMember.id(), study.getId());
-            // 해당 스터디 조회 폼으로 이동
+        try{
+            // 기존 controller가 하던 조회와 작성자 검증을 Service가 수행하도록 수정
+            study = studyService.findStudyForOwner(loginMember.id(), studyId);
+        }catch(IllegalStateException e){
+            log.warn("권한 없는 사용자의 스터디 수정 접근 memberId={}, studyId={}",  loginMember.id(), studyId);
+
             return "redirect:/studies/" + studyId;
         }
 
@@ -128,14 +130,8 @@ public class StudyController {
                        @Login LoginMemberSession loginMember,
                        @PathVariable Long studyId){
 
-        Study study = studyService.findStudy(studyId);
-
-        // API(Postman 등)를 통한 비정상적인 POST 수정 요청 차단
-        if (!study.getMember().getId().equals(loginMember.id())) {
-            return "redirect:/studies/" + studyId;
-        }
-
-        if(form.getMethod() != StudyMethod.ONLINE && (form.getRegion() == null || form.getRegion().trim().isEmpty())){
+        if(form.getMethod() != StudyMethod.ONLINE &&
+                form.getRegion() == null || form.getRegion().trim().isEmpty()){
             bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
         }
 
@@ -143,9 +139,23 @@ public class StudyController {
             return "studies/editStudyForm";
         }
 
+        try{
+            // 로그인 회원 ID를 전달하면 Service가 스터디 작성자인지 검증한 후 수정
+            studyService.updateStudy(
+                    loginMember.id(),
+                    studyId,
+                    form.getTitle(),
+                    form.getContent(),
+                    form.getMethod(),
+                    form.getRegion(),
+                    form.getCapacity()
+            );
+        }catch(IllegalStateException e){
+            log.warn("권한 없는 사용자의 스터디 수정 시도 memberId={}, studyId={}", loginMember.id(), studyId);
 
-        studyService.updateStudy(studyId, form.getTitle(), form.getContent(),
-                form.getMethod(), form.getRegion(), form.getCapacity());
+            return "redirect:/studies/" + studyId;
+        }
+
 
         return "redirect:/studies/" + studyId;
     }
@@ -195,12 +205,11 @@ public class StudyController {
     @PostMapping("/{studyId}/delete")
     public String deleteStudy(@Login LoginMemberSession loginMember, @PathVariable Long studyId){
 
-        Study study = studyService.findStudy(studyId);
-
-        if(study.getMember().getId().equals(loginMember.id())){
-            studyService.deleteStudy(studyId);
-        }else{
-            log.warn("권한 없는 사용자의 스터디 삭제 시도. memberId={}, studyId={}", loginMember.id(), studyId);
+        try{
+            // controller가 로그인 회원 ID와 삭제 대상 ID만 전달, 실제 작성자 검증과 삭제는 Service가 수행
+            studyService.deleteStudy(loginMember.id(), studyId);
+        }catch(IllegalStateException e){
+            log.warn("권한 없는 사용자의 스터디 삭제 시도 memberId={}, studyId={}", loginMember.id(), studyId);
         }
 
         return "redirect:/studies";

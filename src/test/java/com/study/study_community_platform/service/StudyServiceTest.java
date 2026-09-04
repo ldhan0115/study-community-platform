@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@ActiveProfiles("test")
+@Profile("test")
 class StudyServiceTest {
 
     @Autowired StudyService studyService;
@@ -101,6 +102,25 @@ class StudyServiceTest {
     }
 
     @Test
+    void otherMemberCannotFindStudyForOwner(){
+        // given
+        Member owner = Member.createMember("owner", "1234", "owner@test.com", "오너");
+        Member other = Member.createMember("other", "1234", "other@test.com", "아더");
+
+        em.persist(owner);
+        em.persist(other);
+
+        Long studyId = studyService.registerStudy(owner.getId(), "titleForOwner",
+                "content", StudyMethod.ONLINE, null, 5);
+
+        // when & then
+        assertThatThrownBy(() ->
+                studyService.findStudyForOwner(other.getId(), studyId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
+    }
+
+    @Test
     void updateStudy(){
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
@@ -113,7 +133,7 @@ class StudyServiceTest {
                 "DB를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 5);
 
         //when
-        studyService.updateStudy(studyId, updatedStudy.getTitle(), updatedStudy.getContent(), updatedStudy.getMethod()
+        studyService.updateStudy(member.getId(), studyId, updatedStudy.getTitle(), updatedStudy.getContent(), updatedStudy.getMethod()
                 , updatedStudy.getRegion(), updatedStudy.getCapacity());
         Study findStudy = studyService.findStudy(studyId);
 
@@ -122,6 +142,34 @@ class StudyServiceTest {
         assertThat(updatedStudy.getContent()).isEqualTo(findStudy.getContent());
         assertThat(updatedStudy.getMethod()).isEqualTo(findStudy.getMethod());
         assertThat(updatedStudy.getCapacity()).isEqualTo(findStudy.getCapacity());
+    }
+
+    @Test
+    void otherMemberCannotUpdateStudy(){
+        // given
+        Member owner = Member.createMember("owner", "1234", "owner@test.com", "오너");
+        Member other = Member.createMember("other", "1234", "other@test.com", "아더");
+
+        em.persist(owner);
+        em.persist(other);
+
+        Long studyId = studyService.registerStudy(owner.getId(), "title",
+                "content", StudyMethod.ONLINE, null, 5);
+
+        //when & then
+        assertThatThrownBy(() ->
+                studyService.updateStudy(other.getId(), studyId, "otherTitle",
+                        "otherContent", StudyMethod.ONLINE, null, 10))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
+
+        em.clear();
+
+        Study unchangedStudy = studyService.findStudy(studyId);
+
+        assertThat(unchangedStudy.getTitle()).isEqualTo("title");
+        assertThat(unchangedStudy.getContent()).isEqualTo("content");
+        assertThat(unchangedStudy.getCapacity()).isEqualTo(5);
     }
 
     @Test
@@ -154,10 +202,34 @@ class StudyServiceTest {
                 "SPRING을 열심히 공부해요", StudyMethod.OFFLINE, "서울", 5);
 
         //when
-        studyService.deleteStudy(studyId1);
+        studyService.deleteStudy(member.getId(), studyId1);
         List<Study> studies = studyService.findStudies();
 
         //then
         assertThat(studies.size()).isEqualTo(1);
+    }
+
+    @Test
+    void otherMemberCannotDeleteStudy(){
+        // given
+        Member owner = Member.createMember("owner", "1234", "owner@test.com", "오너");
+        Member other = Member.createMember("other", "1234", "other@test.com", "아더");
+
+        em.persist(owner);
+        em.persist(other);
+
+        Long studyId = studyService.registerStudy(owner.getId(), "No delete", "content",
+                StudyMethod.ONLINE, null, 5);
+
+        //when & then
+        assertThatThrownBy(() ->
+                studyService.deleteStudy(other.getId(), studyId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
+
+        em.clear();
+
+        Study study = studyService.findStudy(studyId);
+        assertThat(study.getDeletedAt()).isNull();
     }
 }
