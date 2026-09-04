@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
+@Profile("local")
 public class TestDataInit {
 
     private final MemberRepository memberRepository;
