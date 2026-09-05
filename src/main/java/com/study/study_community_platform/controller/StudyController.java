@@ -183,14 +183,17 @@ public class StudyController {
     @GetMapping("/{studyId}/applicants")
     public String applicantList(
             @PathVariable Long studyId,
-            @Login Member loginMember,
+            @Login LoginMemberSession loginMember,
             Model model){
 
-        Study study = studyService.findStudy(studyId);
+        Study study;
 
-        // 현재 로그인한 사용자가 스터디장인지 검증
-        if (!study.getMember().getId().equals(loginMember.getId())) {
-            log.warn("권한 없는 사용자의 신청자 관리 접근 memberId={}, studyId={}", loginMember.getId(), study.getId());
+        try{
+            // 신청자 관리 화면은 스터디 작성자만 조회 가능
+            study = studyService.findStudyForOwner(loginMember.id(), studyId);
+        }catch(IllegalStateException e){
+            log.warn("권한 없는 사용자의 신청자 관리 접근 memberId={}, studyId={}", loginMember.id(), studyId);
+
             return "redirect:/studies/" + studyId;
         }
 

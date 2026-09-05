@@ -38,15 +38,13 @@ public class ApplicationController {
     public String cancel(@PathVariable Long applicationId,
                          @Login LoginMemberSession loginMember){
 
-        Application application = applicationService.findApplication(applicationId);
-        // 현재 로그인한 회원의 신청 내역이 맞는지 확인
-        if(!application.getMember().getId().equals(loginMember.id())){
-            log.warn("권한 없는 사용자의 신청 취소 접근 memberId={}, applicationId={}", loginMember.id(), applicationId);
-            return "redirect:/applications";
+        try{
+            // 신청자 검증을 ApplicationService가 수행하도록 변경
+            applicationService.cancelApplication(loginMember.id(), applicationId);
+        }catch(IllegalStateException e){
+            log.warn("권한 없는 사용자의 신청 취소 시도 memberId={}, applicationId={}", loginMember.id(), applicationId);
         }
 
-        // 신청 상태를 CANCELED로 변경
-        applicationService.cancelApplication(applicationId);
         return "redirect:/applications";
     }
 
@@ -54,18 +52,17 @@ public class ApplicationController {
     @PostMapping("/{applicationId}/approve")
     public String approve(@PathVariable Long applicationId,
                           @Login LoginMemberSession loginMember,
-                          @RequestParam Long studyId,
                           RedirectAttributes redirectAttributes){
 
-        Study study = studyService.findStudy(studyId);
-        if(!study.getMember().getId().equals(loginMember.id())){
-            log.warn("권한 없는 사용자의 신청 승인 접근 memberId={}, studyId={}", loginMember.id(), studyId);
-            return "redirect:/studies/" + studyId + "/applicants";
-        }
+        // 브라우저의 studyId를 사용하지 않고 applicationId가 가리키는 실제 신청의 스터디 ID 사용하는 것으로 수정
+        Application application = applicationService.findApplication(applicationId);
+        Long studyId = application.getStudy().getId();
 
         try{
-            applicationService.approveApplication(applicationId);
-        }catch (IllegalStateException e){
+            applicationService.approveApplication(loginMember.id(), applicationId);
+        }catch(IllegalStateException e){
+            log.warn("신청 승인 실패 memberId={}, applicationId={}", loginMember.id(), applicationId);
+
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
@@ -75,16 +72,20 @@ public class ApplicationController {
     // 신청 거절
     @PostMapping("/{applicationId}/reject")
     public String reject(@PathVariable Long applicationId,
-                          @Login LoginMemberSession loginMember,
-                          @RequestParam Long studyId){
+                         @Login LoginMemberSession loginMember,
+                         RedirectAttributes redirectAttributes){
 
-        Study study = studyService.findStudy(studyId);
-        if(!study.getMember().getId().equals(loginMember.id())){
-            log.warn("권한 없는 사용자의 신청 거절 접근 memberId={}, studyId={}", loginMember.id(), studyId);
-            return "redirect:/studies/" + studyId + "/applicants";
+        Application application = applicationService.findApplication(applicationId);
+        Long studyId = application.getStudy().getId();
+
+        try{
+            applicationService.rejectApplication(loginMember.id(), applicationId);
+        }catch(IllegalStateException e){
+            log.warn("신청 거절 실패 memberId={}, applicationId={}", loginMember.id(), applicationId);
+
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        applicationService.rejectApplication(applicationId);
         return "redirect:/studies/" + studyId + "/applicants";
     }
 }

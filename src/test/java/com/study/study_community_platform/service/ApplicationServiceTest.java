@@ -44,6 +44,140 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void otherStudyOwnerCannotApproveApplication(){
+        // given
+        Member otherStudyOwner = Member.createMember("otherOwner", "1234",
+                "otherOwner@test.com", "아더오너");
+
+        Member targetStudyOwner = Member.createMember("targetOwner",
+                "1234", "targetOwner@test.com", "실제오너");
+
+        Member applicant = Member.createMember("applicant", "1234",
+                "applicant@test.com", "신청자"
+        );
+
+        memberRepository.saveAll(List.of(otherStudyOwner, targetStudyOwner, applicant));
+
+        Study otherStudy = Study.createStudy(otherStudyOwner, "다른 스터디",
+                "다른 내용", StudyMethod.ONLINE, null, 5);
+
+        Study targetStudy = Study.createStudy(targetStudyOwner, "실제 스터디",
+                "실제 내용", StudyMethod.ONLINE, null, 5
+        );
+
+        studyRepository.saveAll(List.of(otherStudy, targetStudy));
+
+        Long applicationId = applicationService.applyToStudy(applicant.getId(),
+                targetStudy.getId(), "참여하고 싶습니다.");
+
+        Application application = applicationService.findApplication(applicationId);
+
+        //when & then
+        assertThatThrownBy(() ->
+                applicationService.approveApplication(otherStudyOwner.getId(), applicationId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 작성자만 신청을 승인하거나 거절할 수 있습니다.");
+
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
+    }
+
+    @Test
+    void otherMemberCannotRejectApplication(){
+        // given
+        Member studyOwner = Member.createMember("studyOwner",
+                "1234", "studyOwner@test.com", "오너");
+
+        Member applicant = Member.createMember("applicant", "1234",
+                "applicant@test.com", "신청자");
+
+        Member other = Member.createMember("other", "1234",
+                "other@test.com", "아더");
+
+
+        memberRepository.saveAll(List.of(studyOwner, applicant, other));
+
+        Study study = Study.createStudy(studyOwner, "스터디",
+                "내용", StudyMethod.ONLINE, null, 5
+        );
+
+        studyRepository.save(study);
+
+        Long applicationId = applicationService.applyToStudy(applicant.getId(), study.getId(), "참여하고 싶습니다.");
+
+        Application application = applicationService.findApplication(applicationId);
+
+        //when & then
+        assertThatThrownBy(() ->
+                applicationService.rejectApplication(other.getId(), applicationId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("스터디 작성자만 신청을 승인하거나 거절할 수 있습니다.");
+
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
+    }
+
+    @Test
+    void otherMemberCannotCancelApplication(){
+        // given
+        Member studyOwner = Member.createMember("studyOwner",
+                "1234", "studyOwner@test.com", "오너");
+
+        Member applicant = Member.createMember("applicant", "1234",
+                "applicant@test.com", "신청자");
+
+        Member other = Member.createMember("other", "1234",
+                "other@test.com", "아더");
+
+
+        memberRepository.saveAll(List.of(studyOwner, applicant, other));
+
+        Study study = Study.createStudy(studyOwner, "스터디",
+                "내용", StudyMethod.ONLINE, null, 5
+        );
+
+        studyRepository.save(study);
+
+        Long applicationId = applicationService.applyToStudy(applicant.getId(), study.getId(), "참여하고 싶습니다.");
+
+        Application application = applicationService.findApplication(applicationId);
+
+        //when & then
+        assertThatThrownBy(() ->
+                applicationService.cancelApplication(other.getId(), applicationId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("신청자 본인만 신청을 취소할 수 있습니다.");
+
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
+    }
+
+    @Test
+    void applicantCanCancelOwnApplication(){
+        // given
+        Member studyOwner = Member.createMember("studyOwner",
+                "1234", "studyOwner@test.com", "오너");
+
+        Member applicant = Member.createMember("applicant", "1234",
+                "applicant@test.com", "신청자");
+
+        memberRepository.saveAll(List.of(studyOwner, applicant));
+
+        Study study = Study.createStudy(studyOwner, "스터디",
+                "내용", StudyMethod.ONLINE, null, 5
+        );
+
+        studyRepository.save(study);
+
+        Long applicationId = applicationService.applyToStudy(applicant.getId(), study.getId(), "참여하고 싶습니다.");
+
+        Application application = applicationService.findApplication(applicationId);
+
+        //when
+        applicationService.cancelApplication(applicant.getId(), applicationId);
+
+        // then
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.CANCELED);
+    }
+
+    @Test
     void closeStudyApplication(){
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
@@ -76,10 +210,10 @@ class ApplicationServiceTest {
         Long application1 = applicationService.applyToStudy(member2.getId(), study.getId(), "열심히 하겠습니다.");
         Long application2 = applicationService.applyToStudy(member3.getId(), study.getId(), "열심히 하겠습니당.");
 
-        applicationService.approveApplication(application1);
+        applicationService.approveApplication(member1.getId(), application1);
 
         //when
-        assertThatThrownBy(() -> applicationService.approveApplication(application2))
+        assertThatThrownBy(() -> applicationService.approveApplication(member1.getId(), application2))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
 
@@ -167,10 +301,10 @@ class ApplicationServiceTest {
 
         //when && then
 
-        applicationService.approveApplication(applicationId);
+        applicationService.approveApplication(member.getId(), applicationId);
         assertThat(findApplication.getStatus()).isEqualTo(ApplicationStatus.APPROVED);
 
-        applicationService.rejectApplication(applicationId);
+        applicationService.rejectApplication(member.getId(), applicationId);
         assertThat(findApplication.getStatus()).isEqualTo(ApplicationStatus.REJECTED);
     }
 
