@@ -102,6 +102,9 @@ public class ApplicationService {
         // 정원 검사나 상태 변경 전에 실제 신청 대상 스터디의 작성자인지 검증
         validateStudyOwner(loginMemberId, application);
 
+        // 이미 처리된 상태인지 확인
+        application.validatePendingStatus();
+
         Study study = application.getStudy();
 
         // 현재 승인된 인원수를 조회해서 정원 초과 방어

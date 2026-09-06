@@ -78,18 +78,30 @@ public class Application {
 
     // 신청 승인
     public void approve() {
-        this.status = ApplicationStatus.APPROVED;
+        changeStatus(ApplicationStatus.APPROVED);
     }
 
     // 신청 거절
     public void reject() {
-        this.status = ApplicationStatus.REJECTED;
+        changeStatus(ApplicationStatus.REJECTED);
     }
 
     // 신청 취소
     public void cancel() {
-        this.status = ApplicationStatus.CANCELED;
+        changeStatus(ApplicationStatus.CANCELED);
+    }
 
+    // 새로 생성된 PENDING 신청만 승인·거절·취소 가능, 이미 처리가 끝난 신청은 다른 상태로 변경 x
+    private void changeStatus(ApplicationStatus nextStatus){
+        validatePendingStatus();
+        this.status = nextStatus;
+    }
+
+    // 신청이 아직 처리되지 않은 PENDING 상태인지 확인
+    public void validatePendingStatus(){
+        if(this.status != ApplicationStatus.PENDING){
+            throw new IllegalStateException("대기 중인 신청만 상태를 변경할 수 있습니다.");
+        }
     }
 
 }
