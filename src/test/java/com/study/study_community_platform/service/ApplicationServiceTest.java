@@ -180,7 +180,7 @@ class ApplicationServiceTest {
     @Test
     void closeStudyApplication(){
         // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "t    ester");
         memberRepository.save(member);
 
         Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
@@ -288,24 +288,36 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void changeApplicationStatus(){
+    void approvedApplicationCannotBeRejected(){
         // given
-        Member member = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
-        memberRepository.save(member);
+        Member studyOwner = Member.createMember("studyOwner",
+                "1234", "studyOwner@test.com", "오너");
 
-        Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
+        Member applicant = Member.createMember("applicant", "1234",
+                "applicant@test.com", "신청자");
+
+        memberRepository.saveAll(List.of(studyOwner, applicant));
+
+        Study study = Study.createStudy(studyOwner, "스터디",
+                "내용", StudyMethod.ONLINE, null, 5
+        );
+
         studyRepository.save(study);
 
-        Long applicationId = applicationService.applyToStudy(member.getId(), study.getId(), "화이팅");
-        Application findApplication = applicationService.findApplication(applicationId);
+        Long applicationId = applicationService.applyToStudy(applicant.getId(),
+                study.getId(), "참여하고 싶습니다.");
 
-        //when && then
+        Application application = applicationService.findApplication(applicationId);
 
-        applicationService.approveApplication(member.getId(), applicationId);
-        assertThat(findApplication.getStatus()).isEqualTo(ApplicationStatus.APPROVED);
+        applicationService.approveApplication(studyOwner.getId(), applicationId);
 
-        applicationService.rejectApplication(member.getId(), applicationId);
-        assertThat(findApplication.getStatus()).isEqualTo(ApplicationStatus.REJECTED);
+        //when & then
+        assertThatThrownBy(() ->
+                applicationService.rejectApplication(studyOwner.getId(), applicationId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("대기 중인 신청만 상태를 변경할 수 있습니다.");
+
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED);
     }
 
 }
