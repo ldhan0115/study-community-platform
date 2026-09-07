@@ -32,10 +32,12 @@ public class MemberService {
         return member.getId();
     }
 
-    // 회원 단건 조회
+    // 회원 단건 조회 -> 활성 회원만 조회하도록 변경
     public Member findMember(Long memberId){
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
+        return memberRepository
+                .findByIdAndDeletedAtIsNull(memberId)
+                .orElseThrow(() ->
+                        new IllegalStateException("존재하지 않거나 탈퇴한 회원입니다."));
     }
 
     // 전체 회원 조회
@@ -46,20 +48,23 @@ public class MemberService {
     // 회원 로그인
     public Member login(String loginId, String rawPassword){
 
-        // loginId로 회원을 조회한 뒤 비밀번호가 일치하면 해당 회원 반환
-        // Optional의 filter 사용
-        return memberRepository.findByLoginId(loginId)
-                .filter(m -> passwordEncoder.matches(rawPassword, m.getPassword()))
+        // deletedAt이 null인 활성 회원만 조회한 후 비밀번호가 일치하는 회원 반환
+        return memberRepository
+                .findByLoginIdAndDeletedAtIsNull(loginId)
+                .filter(m ->
+                        passwordEncoder.matches(
+                                rawPassword, m.getPassword()
+                        )
+                )
                 .orElse(null);
     }
 
-    // 회원 정보 수정
+    // 회원 정보 수정 -> 활성 회원만
     @Transactional
     public Member editMember(Long memberId, MemberUpdateDto updateDto){
 
         // 수정할 회원 조회
-        Member findMember = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
+        Member findMember = findMember(memberId);
 
         // 수정할 정보 중복 검사
         validateDuplicateMemberForEdit(findMember ,updateDto);
@@ -77,11 +82,10 @@ public class MemberService {
         return findMember;
     }
 
-    // 회원 탈퇴
+    // 회원 탈퇴 -> 중복 탈퇴 방지
     @Transactional
     public void withdrawMember(Long memberId) {
-        Member findMember = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalStateException("존재하지 않는 회원입니다."));
+        Member findMember = findMember(memberId);
 
         findMember.withdraw();
     }
