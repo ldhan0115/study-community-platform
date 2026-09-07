@@ -129,4 +129,76 @@ class MemberServiceTest {
         assertThat(passwordEncoder.matches("newPassword", updatedMember.getPassword())).isTrue();
         assertThat(updatedMember.getPassword()).isNotEqualTo("newPassword");
     }
+    
+    @Test
+    void withdrawnMemberCannotLogin(){
+        // given
+        JoinMemberForm joinForm = new JoinMemberForm("withdrawnMember", "1234",
+                "withdraw@test.com", "탈퇴회원");
+
+        Long memberId = memberService.join(joinForm);
+
+        Member member = memberService.findMember(memberId);
+
+        memberService.withdrawMember(memberId);
+
+        //when
+        Member loginMember = memberService.login("withdrawnMember", "1234");
+
+        //then
+        assertThat(member.getDeletedAt()).isNotNull();
+        assertThat(loginMember).isNull();
+    }
+
+    @Test
+    void withdrawnMemberCannotBeFound(){
+        // given
+        JoinMemberForm joinForm = new JoinMemberForm("withdrawn", "1234",
+                "withdrawn@test.com", "탈퇴 회원");
+
+        Long memberId = memberService.join(joinForm);
+        memberService.withdrawMember(memberId);
+
+        //when & then
+        assertThatThrownBy(() ->
+                memberService.findMember(memberId)
+        ).isInstanceOf(IllegalStateException.class)
+                .hasMessage("존재하지 않거나 탈퇴한 회원입니다.");
+    }
+
+    @Test
+    void activeMemberCanLogin(){
+        // given
+        JoinMemberForm joinForm = new JoinMemberForm("join", "1234",
+                "join@test.com", "가입 회원");
+
+        Long memberId = memberService.join(joinForm);
+
+        //when
+        Member loginMember = memberService.login("join", "1234");
+
+        //then
+        assertThat(loginMember).isNotNull();
+        assertThat(loginMember.getId()).isEqualTo(memberId);
+    }
+
+    @Test
+    void withdrawnMemberCannotRejoinWithSameLoginId(){
+        // given
+        JoinMemberForm firstJoinForm = new JoinMemberForm("first", "1234",
+                "first@test.com", "처음 가입");
+
+        Long memberId = memberService.join(firstJoinForm);
+        memberService.withdrawMember(memberId);
+
+        JoinMemberForm secondJoinForm = new JoinMemberForm("first", "1234",
+                "second@test.com", "다시 가입");
+
+        //when & then
+        assertThatThrownBy(() ->
+                memberService.join(secondJoinForm)
+        ).isInstanceOf(IllegalStateException.class)
+                .hasMessage("동일한 ID가 존재합니다.");
+
+    }
 }
