@@ -1,12 +1,14 @@
 package com.study.study_community_platform.service;
 
-import com.study.study_community_platform.domain.*;
+import com.study.study_community_platform.domain.Comment;
+import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.domain.Study;
+import com.study.study_community_platform.domain.StudyMethod;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,15 +18,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@Profile("test")
+@ActiveProfiles("test")
 class CommentServiceTest {
 
-    @Autowired CommentService commentService;
-    @Autowired MemberRepository memberRepository;
-    @Autowired StudyRepository studyRepository;
+    @Autowired
+    CommentService commentService;
+    @Autowired
+    MemberRepository memberRepository;
+    @Autowired
+    StudyRepository studyRepository;
 
     @Test
-    void registerComment(){
+    void registerComment() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
@@ -43,7 +48,7 @@ class CommentServiceTest {
     }
 
     @Test
-    void findCommentsByMember(){
+    void findCommentsByMember() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
@@ -65,7 +70,7 @@ class CommentServiceTest {
     }
 
     @Test
-    void findComments(){
+    void findComments() {
         // given
         Member member1 = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
         memberRepository.save(member1);
@@ -91,7 +96,7 @@ class CommentServiceTest {
     }
 
     @Test
-    void updateComment(){
+    void updateComment() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
@@ -111,7 +116,7 @@ class CommentServiceTest {
     }
 
     @Test
-    void deleteComment(){
+    void deleteComment() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);

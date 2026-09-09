@@ -68,9 +68,9 @@ public class ApplicationService {
         return applicationRepository.findByStudyId(studyId);
     }
 
-    // 특정 회원의 신청 목록 조회
+    // 특정 회원의 신청 목록 조회 -> 삭제된 스터디의 신청은 제외
     public List<Application> findApplicationsByMember(Long memberId){
-        return applicationRepository.findByMemberId(memberId);
+        return applicationRepository.findActiveStudyApplicationsByMemberId(memberId);
     }
 
     // 현재 로그인한 회원이 신청 대상 스터디의 작성자인지 검증

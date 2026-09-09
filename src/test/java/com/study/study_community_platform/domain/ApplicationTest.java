@@ -1,6 +1,5 @@
 package com.study.study_community_platform.domain;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -10,13 +9,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ApplicationTest {
 
     @Test
-    void newApplicationStartsPending(){
+    void newApplicationStartsPending() {
         //when
         Application application = createPendingApplication();
 
@@ -33,7 +32,7 @@ class ApplicationTest {
                     "CANCELED"
             }
     )
-    void pendingCanTransitionToTerminalStatus(ApplicationStatus nextStatus){
+    void pendingCanTransitionToTerminalStatus(ApplicationStatus nextStatus) {
         // given
         Application application = createPendingApplication();
 
@@ -47,7 +46,7 @@ class ApplicationTest {
     @ParameterizedTest(name = "{0} 상태에서 {1} 상태로 변경할 수 없다.")
     @MethodSource("forbiddenTransitions")
     void terminalStatusCannotBeChanged(ApplicationStatus currentStatus,
-                                       ApplicationStatus nextStatus){
+                                       ApplicationStatus nextStatus) {
         // given
         Application application = createPendingApplication();
 
@@ -63,7 +62,7 @@ class ApplicationTest {
 
     }
 
-    static Stream<Arguments> forbiddenTransitions(){
+    static Stream<Arguments> forbiddenTransitions() {
         List<ApplicationStatus> terminalStatuses = List.of(
                 ApplicationStatus.APPROVED,
                 ApplicationStatus.REJECTED,
@@ -82,8 +81,8 @@ class ApplicationTest {
                 );
     }
 
-    private void transitionTo(Application application, ApplicationStatus nextStatus){
-        switch(nextStatus){
+    private void transitionTo(Application application, ApplicationStatus nextStatus) {
+        switch (nextStatus) {
             case APPROVED -> application.approve();
             case REJECTED -> application.reject();
             case CANCELED -> application.cancel();
@@ -92,7 +91,7 @@ class ApplicationTest {
         }
     }
 
-    private Application createPendingApplication(){
+    private Application createPendingApplication() {
         Member studyOwner = Member.createMember("owner", "1234",
                 "owner@test.com", "오너");
 

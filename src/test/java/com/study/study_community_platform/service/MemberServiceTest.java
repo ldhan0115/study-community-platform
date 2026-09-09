@@ -6,25 +6,27 @@ import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@Profile("test")
+@ActiveProfiles("test")
 class MemberServiceTest {
 
-    @Autowired MemberService memberService;
-    @Autowired PasswordEncoder passwordEncoder;
+    @Autowired
+    MemberService memberService;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Test
-    void join(){
+    void join() {
         // given
         JoinMemberForm form = new JoinMemberForm("test", "1234", "test@gmail.com", "tester");
 
@@ -39,7 +41,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void validateDuplicateLoginId(){
+    void validateDuplicateLoginId() {
         // given
         JoinMemberForm form1 = new JoinMemberForm("test", "1234", "test1@gmail.com", "tester1");
         JoinMemberForm form2 = new JoinMemberForm("test", "1234", "test2@gmail.com", "tester2");
@@ -53,7 +55,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void validateDuplicateEmail(){
+    void validateDuplicateEmail() {
         // given
         JoinMemberForm form1 = new JoinMemberForm("test1", "1234", "test@gmail.com", "tester1");
         JoinMemberForm form2 = new JoinMemberForm("test2", "1234", "test@gmail.com", "tester2");
@@ -67,7 +69,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void validateDuplicateNickname(){
+    void validateDuplicateNickname() {
         // given
         JoinMemberForm form1 = new JoinMemberForm("test1", "1234", "test1@gmail.com", "tester");
         JoinMemberForm form2 = new JoinMemberForm("test2", "1234", "test2@gmail.com", "tester");
@@ -81,7 +83,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void findMembers(){
+    void findMembers() {
         // given
         JoinMemberForm form1 = new JoinMemberForm("test1", "1234", "test1@gmail.com", "tester1");
         JoinMemberForm form2 = new JoinMemberForm("test2", "1234", "test2@gmail.com", "tester2");
@@ -102,7 +104,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void editMemberKeepsMemberIdAndEncodedPassword(){
+    void editMemberKeepsMemberIdAndEncodedPassword() {
         // given
         JoinMemberForm joinMemberForm = new JoinMemberForm(
                 "member1",
@@ -129,9 +131,9 @@ class MemberServiceTest {
         assertThat(passwordEncoder.matches("newPassword", updatedMember.getPassword())).isTrue();
         assertThat(updatedMember.getPassword()).isNotEqualTo("newPassword");
     }
-    
+
     @Test
-    void withdrawnMemberCannotLogin(){
+    void withdrawnMemberCannotLogin() {
         // given
         JoinMemberForm joinForm = new JoinMemberForm("withdrawnMember", "1234",
                 "withdraw@test.com", "탈퇴회원");
@@ -151,7 +153,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void withdrawnMemberCannotBeFound(){
+    void withdrawnMemberCannotBeFound() {
         // given
         JoinMemberForm joinForm = new JoinMemberForm("withdrawn", "1234",
                 "withdrawn@test.com", "탈퇴 회원");
@@ -167,7 +169,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void activeMemberCanLogin(){
+    void activeMemberCanLogin() {
         // given
         JoinMemberForm joinForm = new JoinMemberForm("join", "1234",
                 "join@test.com", "가입 회원");
@@ -183,7 +185,7 @@ class MemberServiceTest {
     }
 
     @Test
-    void withdrawnMemberCannotRejoinWithSameLoginId(){
+    void withdrawnMemberCannotRejoinWithSameLoginId() {
         // given
         JoinMemberForm firstJoinForm = new JoinMemberForm("first", "1234",
                 "first@test.com", "처음 가입");

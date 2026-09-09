@@ -22,7 +22,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginCheckInterceptor())
                 .order(1) // interceptor 처리 순서
                 .addPathPatterns("/**") // 기본으로 모든 경로 검사
-                .excludePathPatterns("/", "/members/join", "/members/login", "/members/logout", "/studies",
+                .excludePathPatterns("/", "/members/join", "/members/login", "/members/logout",
+                        // 목록과 숫자 ID 상세 조회만 공개하고,
+                        // /studies/new 등의 변경 경로는 로그인 검사를 유지
+                        "/studies", "/studies/{studyId:[0-9]+}",
                         "/css/**", "/vendor/**", "/error"); // 검사 예외 경로
     }
 }
