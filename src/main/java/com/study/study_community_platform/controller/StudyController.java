@@ -46,7 +46,8 @@ public class StudyController {
                            BindingResult bindingResult){
 
         // 오프라인일 때만 지역 정보가 필수이므로 폼 에러를 동적으로 제어
-        if(form.getMethod() != StudyMethod.ONLINE && (form.getRegion() == null || form.getRegion().trim().isEmpty())){
+        if(form.getMethod() != StudyMethod.ONLINE &&
+                ((form.getRegion() == null || form.getRegion().trim().isBlank()))){
             bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
         }
 
@@ -131,7 +132,7 @@ public class StudyController {
                        @PathVariable Long studyId){
 
         if(form.getMethod() != StudyMethod.ONLINE &&
-                form.getRegion() == null || form.getRegion().trim().isEmpty()){
+                (form.getRegion() == null || form.getRegion().trim().isBlank())){
             bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
         }
 

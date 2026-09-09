@@ -8,7 +8,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +18,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@Profile("test")
+@ActiveProfiles("test")
 class StudyServiceTest {
 
-    @Autowired StudyService studyService;
-    @Autowired EntityManager em;
+    @Autowired
+    StudyService studyService;
+    @Autowired
+    EntityManager em;
 
     @Test
-    void createStudy(){
+    void createStudy() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -43,7 +44,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void studyNoExist(){
+    void studyNoExist() {
         //then
         assertThatThrownBy(() -> studyService.findStudy(10L))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -52,7 +53,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void noTitle(){
+    void noTitle() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -66,7 +67,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void capacityException(){
+    void capacityException() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -79,7 +80,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void findStudies(){
+    void findStudies() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -102,7 +103,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void otherMemberCannotFindStudyForOwner(){
+    void otherMemberCannotFindStudyForOwner() {
         // given
         Member owner = Member.createMember("owner", "1234", "owner@test.com", "오너");
         Member other = Member.createMember("other", "1234", "other@test.com", "아더");
@@ -121,7 +122,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void updateStudy(){
+    void updateStudy() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -145,7 +146,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void otherMemberCannotUpdateStudy(){
+    void otherMemberCannotUpdateStudy() {
         // given
         Member owner = Member.createMember("owner", "1234", "owner@test.com", "오너");
         Member other = Member.createMember("other", "1234", "other@test.com", "아더");
@@ -173,7 +174,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void closeStudy(){
+    void closeStudy() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -190,7 +191,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void deleteStudy(){
+    void deleteStudy() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         em.persist(member);
@@ -210,7 +211,7 @@ class StudyServiceTest {
     }
 
     @Test
-    void otherMemberCannotDeleteStudy(){
+    void otherMemberCannotDeleteStudy() {
         // given
         Member owner = Member.createMember("owner", "1234", "owner@test.com", "오너");
         Member other = Member.createMember("other", "1234", "other@test.com", "아더");

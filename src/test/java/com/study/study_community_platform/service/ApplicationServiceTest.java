@@ -3,10 +3,10 @@ package com.study.study_community_platform.service;
 import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,15 +17,22 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@Profile("test")
+@ActiveProfiles("test")
 class ApplicationServiceTest {
 
-    @Autowired ApplicationService applicationService;
-    @Autowired MemberRepository memberRepository;
-    @Autowired StudyRepository studyRepository;
+    @Autowired
+    ApplicationService applicationService;
+    @Autowired
+    MemberRepository memberRepository;
+    @Autowired
+    StudyRepository studyRepository;
+    @Autowired
+    StudyService studyService;
+    @Autowired
+    EntityManager em;
 
     @Test
-    void applyToStudy(){
+    void applyToStudy() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
@@ -44,7 +51,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void otherStudyOwnerCannotApproveApplication(){
+    void otherStudyOwnerCannotApproveApplication() {
         // given
         Member otherStudyOwner = Member.createMember("otherOwner", "1234",
                 "otherOwner@test.com", "아더오너");
@@ -82,7 +89,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void otherMemberCannotRejectApplication(){
+    void otherMemberCannotRejectApplication() {
         // given
         Member studyOwner = Member.createMember("studyOwner",
                 "1234", "studyOwner@test.com", "오너");
@@ -116,7 +123,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void otherMemberCannotCancelApplication(){
+    void otherMemberCannotCancelApplication() {
         // given
         Member studyOwner = Member.createMember("studyOwner",
                 "1234", "studyOwner@test.com", "오너");
@@ -150,7 +157,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void applicantCanCancelOwnApplication(){
+    void applicantCanCancelOwnApplication() {
         // given
         Member studyOwner = Member.createMember("studyOwner",
                 "1234", "studyOwner@test.com", "오너");
@@ -178,9 +185,9 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void closeStudyApplication(){
+    void closeStudyApplication() {
         // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "t    ester");
+        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
 
         Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
@@ -195,7 +202,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void fullCapacity(){
+    void fullCapacity() {
         // given
         Member member1 = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
         Member member2 = Member.createMember("test2", "1234", "test2@gmail.com", "tester2");
@@ -220,7 +227,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void sameApplication(){
+    void sameApplication() {
         // given
         Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
         memberRepository.save(member);
@@ -237,7 +244,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void findApplicationByStudy(){
+    void findApplicationByStudy() {
         // given
         Member member1 = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
         Member member2 = Member.createMember("test2", "1234", "test2@gmail.com", "tester2");
@@ -262,7 +269,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void findApplicationsByMember(){
+    void findApplicationsByMember() {
         // given
         Member member = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
         memberRepository.save(member);
@@ -288,7 +295,38 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void approvedApplicationCannotBeRejected(){
+    void deletedStudyApplicationIsNotShownInMemberApplicationList() {
+        // given
+        Member studyOwner = Member.createMember("studyOwner",
+                "1234", "studyOwner@test.com", "오너");
+
+        Member applicant = Member.createMember("applicant", "1234",
+                "applicant@test.com", "신청자");
+
+        memberRepository.saveAll(List.of(studyOwner, applicant));
+
+        Study study = Study.createStudy(studyOwner, "삭제될 스터디",
+                "내용", StudyMethod.ONLINE, null, 5
+        );
+
+        studyRepository.save(study);
+
+        applicationService.applyToStudy(applicant.getId(), study.getId(), "참여하고 싶습니다.");
+
+        studyService.deleteStudy(studyOwner.getId(), study.getId());
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<Application> applications = applicationService.findApplicationsByMember(applicant.getId());
+
+        //then
+        assertThat(applications).isEmpty();
+    }
+
+    @Test
+    void approvedApplicationCannotBeRejected() {
         // given
         Member studyOwner = Member.createMember("studyOwner",
                 "1234", "studyOwner@test.com", "오너");

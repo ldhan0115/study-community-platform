@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,18 +19,20 @@ import org.springframework.validation.BindingResult;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@Profile("test")
+@ActiveProfiles("test")
 public class MemberControllerTest {
 
-    @Autowired MemberController memberController;
-    @Autowired MemberService memberService;
+    @Autowired
+    MemberController memberController;
+    @Autowired
+    MemberService memberService;
 
     @Test
-    void editKeepsLoginMemberIdAndUpdatedNickname(){
+    void editKeepsLoginMemberIdAndUpdatedNickname() {
         // given
         JoinMemberForm joinForm = new JoinMemberForm(
                 "member1",
@@ -70,7 +71,7 @@ public class MemberControllerTest {
     }
 
     @Test
-    void loginSessionDoesNotContainPassword(){
+    void loginSessionDoesNotContainPassword() {
         // given
         String[] fieldNames = Arrays.stream(LoginMemberSession.class.getRecordComponents())
                 .map(RecordComponent::getName)

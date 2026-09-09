@@ -199,7 +199,7 @@ Windows:
 .\gradlew.bat clean test
 ```
 
-테스트는 `src/test/resources/application.yml`의 독립적인 인메모리 H2 데이터베이스를 사용합니다.
+테스트는 `src/test/resources/application-test.yml`의 독립적인 인메모리 H2 데이터베이스를 사용합니다.
 
 ## 🔥 트러블슈팅 및 기술적 의사결정
 
@@ -246,7 +246,7 @@ src
     │   ├── controller
     │   ├── domain
     │   └── service
-    └── resources/application.yml
+    └── resources/application-test.yml
 ```
 
 ## 📊 ERD 및 설계 문서
