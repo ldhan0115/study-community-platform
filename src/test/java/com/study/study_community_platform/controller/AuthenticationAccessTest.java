@@ -1,7 +1,5 @@
 package com.study.study_community_platform.controller;
 
-import com.study.study_community_platform.controller.web.SessionConst;
-import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.domain.StudyMethod;
@@ -13,13 +11,16 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -77,7 +78,7 @@ public class AuthenticationAccessTest {
         return memberRepository.save(
                 Member.createMember(
                         "securityMember",
-                        "password123",
+                        passwordEncoder.encode("password123"),
                         "security@test.com",
                         "보안 테스트"
                 )
@@ -95,29 +96,46 @@ public class AuthenticationAccessTest {
     void guestIsRedirectedFromProtectedPages(String path) throws Exception{
         mockMvc.perform(get(path))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(
-                        redirectedUrl(
-                                "/members/login?redirectURL=" + path
-                        )
+                .andExpect(redirectedUrl("/members/login")
                 );
     }
 
     @Test
     void loggedInMemberCanAccessProtectedPage() throws Exception {
-
         Member member = saveMember();
-        LoginMemberSession loginMember = LoginMemberSession.from(member);
 
+        MvcResult loginResult = mockMvc.perform(
+                        post("/members/login")
+                                .with(csrf())
+                                .param(
+                                        "loginId",
+                                        member.getLoginId()
+                                )
+                                .param("password",
+                                        "password123"
+                                )
+                )
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+
+        // 로그인 결과에서 세션을 가져옴
+        MockHttpSession session = (MockHttpSession) loginResult
+                .getRequest()
+                .getSession();
+
+        // 해당 세션으로 보호 URL에 접근 -> 정상 접근 확인
         mockMvc.perform(
                 get("/members/edit")
-                        .sessionAttr(
-                                SessionConst.LOGIN_MEMBER,
-                                loginMember
-                        )
-        )
+                        .session(session)
+                )
+
                 .andExpect(status().isOk())
-                .andExpect(view().name("members/editMemberForm"))
-                .andExpect(model().attributeExists("member"));
+                .andExpect(
+                        view().name("members/editMemberForm")
+                )
+                .andExpect(
+                        model().attributeExists("member")
+                );
     }
 
 
