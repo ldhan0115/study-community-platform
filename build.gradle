@@ -31,9 +31,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
-
-	// 비밀번호 암호화
-	implementation 'org.springframework.security:spring-security-crypto'
+	// 기존 비밀번호 암호화만 사용 -> Spring Security로 변경
+	// 필터 체인, 인증, 인가, CSRF, 세션 보안 등의 기능 제공
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:2.0.0'
 	runtimeOnly 'org.springframework.boot:spring-boot-devtools'
@@ -41,6 +41,10 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// MockMvc에서 csrf(), authenticated(), unauthenticated() 등 사용
+	testImplementation 'org.springframework.security:spring-security-test'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'

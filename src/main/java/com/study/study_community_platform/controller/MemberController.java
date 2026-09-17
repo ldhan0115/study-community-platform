@@ -76,38 +76,6 @@ public class MemberController {
         return "members/loginMemberForm";
     }
 
-    // 로그인
-    @PostMapping("/login")
-    public String login(@Validated @ModelAttribute("member") LoginMemberForm form,
-                        BindingResult bindingResult,
-                        @RequestParam(defaultValue = "/") String redirectURL,
-                        HttpServletRequest request){
-
-        // 필드 검증 실패 시 로그인 화면으로
-        if(bindingResult.hasErrors()){
-            return "members/loginMemberForm";
-        }
-
-        // 아이디/비밀번호 일치하는 회원 반환
-        Member authenticatedMember = memberService.login(form.getLoginId(), form.getPassword());
-
-        // 인증 실패 시 글로벌 에러 담아서 로그인 화면으로 이동
-        if(authenticatedMember == null){
-            bindingResult.reject("loginFail", "아이디 또는 비밀번호가 일치하지 않습니다.");
-            return "members/loginMemberForm";
-        }
-
-        HttpSession session = request.getSession();
-
-        // Member 엔티티 전체가 아닌 인증과 화면 표시에 필요한 최소 정보만 세션에 저장
-        LoginMemberSession loginMemberSession = LoginMemberSession.from(authenticatedMember);
-        session.setAttribute(SessionConst.LOGIN_MEMBER, loginMemberSession);
-
-        // 로그인 하기 전 주소로 이동
-        return "redirect:" + redirectURL;
-
-    }
-
     // 회원 정보 수정 폼으로 이동
     @GetMapping("/edit")
     // @Login 애노테이션 활용
@@ -160,20 +128,6 @@ public class MemberController {
         session.setAttribute(SessionConst.LOGIN_MEMBER, LoginMemberSession.from(updatedMember));
         return "redirect:/";
 
-    }
-
-    // 로그아웃
-    @PostMapping("/logout")
-    public String logout(HttpServletRequest request) {
-
-        // 기존 세션만 가져오고 새로 생성하지 않음
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            // 세션 정보 완전 삭제 및 무효화
-            session.invalidate();
-        }
-
-        return "redirect:/";
     }
 
     // 회원 탈퇴

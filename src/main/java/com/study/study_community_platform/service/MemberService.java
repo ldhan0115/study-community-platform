@@ -45,20 +45,6 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    // 회원 로그인
-    public Member login(String loginId, String rawPassword){
-
-        // deletedAt이 null인 활성 회원만 조회한 후 비밀번호가 일치하는 회원 반환
-        return memberRepository
-                .findByLoginIdAndDeletedAtIsNull(loginId)
-                .filter(m ->
-                        passwordEncoder.matches(
-                                rawPassword, m.getPassword()
-                        )
-                )
-                .orElse(null);
-    }
-
     // 회원 정보 수정 -> 활성 회원만
     @Transactional
     public Member editMember(Long memberId, MemberUpdateDto updateDto){
