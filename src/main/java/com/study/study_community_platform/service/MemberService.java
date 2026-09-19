@@ -2,6 +2,7 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class MemberService {
         return memberRepository
                 .findByIdAndDeletedAtIsNull(memberId)
                 .orElseThrow(() ->
-                        new IllegalStateException("존재하지 않거나 탈퇴한 회원입니다."));
+                        new ResourceNotFoundException("존재하지 않거나 탈퇴한 회원입니다."));
     }
 
     // 전체 회원 조회

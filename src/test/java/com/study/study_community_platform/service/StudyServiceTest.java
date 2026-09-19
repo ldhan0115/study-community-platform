@@ -4,6 +4,9 @@ import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.domain.StudyMethod;
 import com.study.study_community_platform.domain.StudyStatus;
+import com.study.study_community_platform.exception.BusinessRuleException;
+import com.study.study_community_platform.exception.ForbiddenOperationException;
+import com.study.study_community_platform.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +50,7 @@ class StudyServiceTest {
     void studyNoExist() {
         //then
         assertThatThrownBy(() -> studyService.findStudy(10L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("존재하지 않는 스터디입니다.");
 
     }
@@ -117,7 +120,7 @@ class StudyServiceTest {
         // when & then
         assertThatThrownBy(() ->
                 studyService.findStudyForOwner(other.getId(), studyId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
     }
 
@@ -161,7 +164,7 @@ class StudyServiceTest {
         assertThatThrownBy(() ->
                 studyService.updateStudy(other.getId(), studyId, "otherTitle",
                         "otherContent", StudyMethod.ONLINE, null, 10))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
 
         em.clear();
@@ -225,7 +228,7 @@ class StudyServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 studyService.deleteStudy(other.getId(), studyId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
 
         em.clear();

@@ -1,6 +1,8 @@
 package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.domain.*;
+import com.study.study_community_platform.exception.BusinessRuleException;
+import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import jakarta.persistence.EntityManager;
@@ -82,7 +84,7 @@ class ApplicationServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 applicationService.approveApplication(otherStudyOwner.getId(), applicationId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("스터디 작성자만 신청을 승인하거나 거절할 수 있습니다.");
 
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
@@ -116,7 +118,7 @@ class ApplicationServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 applicationService.rejectApplication(other.getId(), applicationId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("스터디 작성자만 신청을 승인하거나 거절할 수 있습니다.");
 
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
@@ -150,7 +152,7 @@ class ApplicationServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 applicationService.cancelApplication(other.getId(), applicationId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("신청자 본인만 신청을 취소할 수 있습니다.");
 
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
@@ -197,7 +199,7 @@ class ApplicationServiceTest {
 
         //when
         assertThatThrownBy(() -> applicationService.applyToStudy(member.getId(), study.getId(), "열심히 하겠습니다."))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("모집이 마감된 스터디입니다.");
     }
 
@@ -221,7 +223,7 @@ class ApplicationServiceTest {
 
         //when
         assertThatThrownBy(() -> applicationService.approveApplication(member1.getId(), application2))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
 
     }
@@ -239,7 +241,7 @@ class ApplicationServiceTest {
 
         //when
         assertThatThrownBy(() -> applicationService.applyToStudy(member.getId(), study.getId(), "또 왔어요"))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("신청 대기 중이거나 이미 승인된 스터디입니다.");
     }
 
@@ -352,7 +354,7 @@ class ApplicationServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 applicationService.rejectApplication(studyOwner.getId(), applicationId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("대기 중인 신청만 상태를 변경할 수 있습니다.");
 
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED);

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>오류</title>
+</head>
+
+<body>
+
+<main>
+    <!-- 400, 403, 404 등의 실제 상태 코드 -->
+    <h1 th:text="${status}">
+        404
+    </h1>
+
+    <!-- 사용자에게 보여줄 오류 제목 -->
+    <h2 th:text="${title}">
+        요청한 정보를 찾을 수 없습니다.
+    </h2>
+
+    <!-- 도메인 예외에 담긴 구체적인 메시지 -->
+    <p th:text="${message}">
+        존재하지 않는 스터디입니다.
+    </p>
+
+    <a th:href="@{/}">
+        홈으로 이동
+    </a>
+
+    <a th:href="@{/studies}">
+        스터디 목록으로 이동
+    </a>
+</main>
+
+</body>
+</html>

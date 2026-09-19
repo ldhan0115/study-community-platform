@@ -3,8 +3,6 @@ package com.study.study_community_platform.controller;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Application;
-import com.study.study_community_platform.domain.Member;
-import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.service.ApplicationService;
 import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
 
 @Slf4j
 @Controller
@@ -38,12 +35,7 @@ public class ApplicationController {
     public String cancel(@PathVariable Long applicationId,
                          @Login LoginMemberSession loginMember){
 
-        try{
-            // 신청자 검증을 ApplicationService가 수행하도록 변경
-            applicationService.cancelApplication(loginMember.id(), applicationId);
-        }catch(IllegalStateException e){
-            log.warn("권한 없는 사용자의 신청 취소 시도 memberId={}, applicationId={}", loginMember.id(), applicationId);
-        }
+        applicationService.cancelApplication(loginMember.id(), applicationId);
 
         return "redirect:/applications";
     }

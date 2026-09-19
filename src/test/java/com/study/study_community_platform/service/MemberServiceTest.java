@@ -2,6 +2,7 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,7 +145,7 @@ class MemberServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 memberService.findMember(memberId)
-        ).isInstanceOf(IllegalStateException.class)
+        ).isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("존재하지 않거나 탈퇴한 회원입니다.");
     }
 

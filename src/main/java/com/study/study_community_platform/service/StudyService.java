@@ -3,6 +3,8 @@ package com.study.study_community_platform.service;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.domain.StudyMethod;
+import com.study.study_community_platform.exception.ForbiddenOperationException;
+import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ public class StudyService {
 
         // 스터디 작성자 조회
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다."));
 
         // Study 객체 생성 메서드를 사용해 생성 규칙을 한 곳에서 관리
         Study study = Study.createStudy(member, title, content, method, region, capacity);
@@ -43,7 +45,7 @@ public class StudyService {
     // 스터디 단건 조회
     public Study findStudy(Long studyId){
         return studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
     }
 
@@ -58,7 +60,7 @@ public class StudyService {
     // 다른 코드가 Service를 직접 호출했을 때 검증을 우회할 수 있으므로 Service 내부에서 검사
     private void validateStudyOwner(Long loginMemberId, Study study){
         if(!study.getMember().getId().equals(loginMemberId)){
-            throw new IllegalStateException("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
+            throw new ForbiddenOperationException("스터디 작성자만 수정하거나 삭제할 수 있습니다.");
         }
     }
 
@@ -90,8 +92,7 @@ public class StudyService {
     // 스터디 모집 마감 처리
     @Transactional
     public void closeStudy(Long studyId){
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+        Study study = findStudy(studyId);
 
         // 스터디 객체 내부에 비즈니스 로직 위치
         study.close();

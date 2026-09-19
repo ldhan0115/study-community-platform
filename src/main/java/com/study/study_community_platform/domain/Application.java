@@ -1,5 +1,6 @@
 package com.study.study_community_platform.domain;
 
+import com.study.study_community_platform.exception.BusinessRuleException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -100,7 +101,7 @@ public class Application {
     // 신청이 아직 처리되지 않은 PENDING 상태인지 확인
     public void validatePendingStatus(){
         if(this.status != ApplicationStatus.PENDING){
-            throw new IllegalStateException("대기 중인 신청만 상태를 변경할 수 있습니다.");
+            throw new BusinessRuleException("대기 중인 신청만 상태를 변경할 수 있습니다.");
         }
     }
 
