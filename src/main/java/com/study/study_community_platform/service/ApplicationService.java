@@ -1,6 +1,9 @@
 package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.domain.*;
+import com.study.study_community_platform.exception.BusinessRuleException;
+import com.study.study_community_platform.exception.ForbiddenOperationException;
+import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
@@ -24,20 +27,20 @@ public class ApplicationService {
 
         // 신청을 하는 회원 존재 여부 확인
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다."));
 
         // 신청 대상 스터디 존재 여부 확인
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
         // 스터디 모집 상태 확인
         // CLOSED 상태라면 더 이상 신청 불가
         if(study.getStudyStatus() == StudyStatus.CLOSED){
-            throw new IllegalStateException("모집이 마감된 스터디입니다.");
+            throw new BusinessRuleException("모집이 마감된 스터디입니다.");
         }
 
         if(isApplied(memberId, studyId)){
-            throw new IllegalStateException("신청 대기 중이거나 이미 승인된 스터디입니다.");
+            throw new BusinessRuleException("신청 대기 중이거나 이미 승인된 스터디입니다.");
         }
 
         // 스터디 신청 엔티티 생성
@@ -60,7 +63,7 @@ public class ApplicationService {
     // 신청 단건 조회
     public Application findApplication(Long applicationId){
         return applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 신청입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 신청입니다."));
     }
 
     // 특정 스터디의 신청 목록 조회
@@ -79,7 +82,7 @@ public class ApplicationService {
         Long studyOwnerId = application.getStudy().getMember().getId();
 
         if(!studyOwnerId.equals(loginMemberId)){
-            throw new IllegalStateException("스터디 작성자만 신청을 승인하거나 거절할 수 있습니다.");
+            throw new ForbiddenOperationException("스터디 작성자만 신청을 승인하거나 거절할 수 있습니다.");
         }
     }
 
@@ -88,7 +91,7 @@ public class ApplicationService {
         Long applicantId = application.getMember().getId();
 
         if (!applicantId.equals(loginMemberId)) {
-            throw new IllegalStateException("신청자 본인만 신청을 취소할 수 있습니다.");
+            throw new ForbiddenOperationException("신청자 본인만 신청을 취소할 수 있습니다.");
         }
     }
 
@@ -110,7 +113,7 @@ public class ApplicationService {
         // 현재 승인된 인원수를 조회해서 정원 초과 방어
         long approvedCount = applicationRepository.countByStudyIdAndStatus(study.getId(), ApplicationStatus.APPROVED);
         if(approvedCount >= study.getCapacity()){
-            throw new IllegalStateException("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
+            throw new BusinessRuleException("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
         }
 
         // 엔티티 내부 상태 변경

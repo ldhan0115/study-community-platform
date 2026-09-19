@@ -2,7 +2,6 @@ package com.study.study_community_platform.controller;
 
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.session.LoginMemberSession;
-import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +36,7 @@ public class CommentController {
                               @RequestParam String content){
 
         // 내가 쓴 댓글 일때만 수정
-        try{
-            commentService.updateComment(loginMember.id(), commentId, content);
-        }catch(IllegalStateException e){
-            log.warn("권한 없는 사용자의 댓글 수정 시도. memberId={}, commentId={}", loginMember.id(), commentId);
-        }
+        commentService.updateComment(loginMember.id(), commentId, content);
 
         return "redirect:/studies/" + studyId;
     }
@@ -53,11 +48,7 @@ public class CommentController {
                                 @PathVariable Long commentId){
 
         // 내가 쓴 댓글 일때만 삭제
-        try{
-            commentService.deleteComment(loginMember.id(), commentId);
-        }catch(IllegalStateException e){
-            log.warn("권한 없는 사용자의 댓글 삭제 시도. memberId={}, commentId={}", loginMember.id(), commentId);
-        }
+        commentService.deleteComment(loginMember.id(), commentId);
 
         return "redirect:/studies/"+studyId;
     }

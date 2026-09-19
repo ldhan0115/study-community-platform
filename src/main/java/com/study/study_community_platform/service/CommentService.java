@@ -3,6 +3,8 @@ package com.study.study_community_platform.service;
 import com.study.study_community_platform.domain.Comment;
 import com.study.study_community_platform.domain.Member;
 import com.study.study_community_platform.domain.Study;
+import com.study.study_community_platform.exception.ForbiddenOperationException;
+import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.CommentRepository;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
@@ -27,11 +29,11 @@ public class CommentService {
 
         // 댓글 작성 회원 존재 여부 확인
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다."));
 
         // 댓글 작성 스터디 존재 여부 확인
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
         // Comment 객체 생성 메서드를 사용
         Comment comment = Comment.createComment(member, study, content);
@@ -43,7 +45,7 @@ public class CommentService {
     // 댓글 단건 조회
     public Comment findComment(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
     }
 
     // 특정 회원의 댓글 목록 조회
@@ -66,10 +68,10 @@ public class CommentService {
     public void updateComment(Long memberId, Long commentId, String content) {
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
 
         if(!comment.getMember().getId().equals(memberId)){
-            throw new IllegalStateException("댓글 수정 권한이 없습니다.");
+            throw new ForbiddenOperationException("댓글 수정 권한이 없습니다.");
         }
 
         comment.changeCommentInfo(content);
@@ -80,10 +82,10 @@ public class CommentService {
     public void deleteComment(Long memberId, Long commentId) {
         Comment comment = commentRepository
                 .findById(commentId)
-                .orElseThrow(() -> new IllegalStateException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
 
         if(!comment.getMember().getId().equals(memberId)){
-            throw new IllegalStateException("댓글 삭제 권한이 없습니다.");
+            throw new ForbiddenOperationException("댓글 삭제 권한이 없습니다.");
         }
 
         comment.withdraw();
