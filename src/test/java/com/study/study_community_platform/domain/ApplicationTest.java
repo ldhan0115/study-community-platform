@@ -1,5 +1,7 @@
 package com.study.study_community_platform.domain;
 
+import com.study.study_community_platform.exception.BusinessRuleException;
+import com.study.study_community_platform.exception.ForbiddenOperationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -55,7 +57,7 @@ class ApplicationTest {
         // when & then
         assertThatThrownBy(() ->
                 transitionTo(application, nextStatus))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("대기 중인 신청만 상태를 변경할 수 있습니다.");
 
         assertThat(application.getStatus()).isEqualTo(currentStatus);
