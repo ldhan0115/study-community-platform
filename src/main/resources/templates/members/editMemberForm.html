@@ -86,6 +86,17 @@
 
                     <form th:action th:object="${member}" method="post">
 
+                        <!-- 특정 필드를 확정할 수 없는 DB 중복 충돌 표시. -->
+                        <div th:if="${#fields.hasGlobalErrors()}"
+                             class="alert alert-danger"
+                             role="alert">
+
+                            <div th:each="error : ${#fields.globalErrors()}"
+                                 th:text="${error}">
+                                회원 정보 오류
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label" th:for="loginId">아이디</label>
                             <input type="text" th:field="*{loginId}"
@@ -107,6 +118,7 @@
                         <div class="mb-4">
                             <label class="form-label" th:for="email">이메일</label>
                             <input type="email" th:field="*{email}"
+                                   maxlength="100"
                                    class="form-control"
                                    th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
                                    placeholder="example@study.com">
@@ -116,6 +128,7 @@
                         <div class="mb-5">
                             <label class="form-label" th:for="password">비밀번호 변경</label>
                             <input type="password" th:field="*{password}"
+                                   minlength="8" maxlength="20"
                                    class="form-control"
                                    th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
                                    placeholder="새 비밀번호">

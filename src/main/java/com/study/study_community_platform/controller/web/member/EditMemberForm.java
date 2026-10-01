@@ -1,5 +1,6 @@
 package com.study.study_community_platform.controller.web.member;
 
+import com.study.study_community_platform.domain.Member;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -19,6 +20,7 @@ public class EditMemberForm {
 
     @NotBlank(message = "이메일은 필수입니다.")
     @Email(message = "이메일 형식이 올바르지 않습니다.")
+    @Size(max = Member.MAX_EMAIL_LENGTH, message = "이메일은 {max}자 이하로 입력해주세요.")
     private String email;
 
     @NotBlank(message = "닉네임은 필수입니다.")

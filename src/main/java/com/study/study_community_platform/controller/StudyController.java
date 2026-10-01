@@ -4,6 +4,7 @@ import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.controller.web.study.EditStudyForm;
 import com.study.study_community_platform.controller.web.study.RegisterStudyForm;
+import com.study.study_community_platform.controller.web.study.StudyApplicationForm;
 import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.exception.BusinessRuleException;
 import com.study.study_community_platform.service.ApplicationService;
@@ -47,8 +48,8 @@ public class StudyController {
                            BindingResult bindingResult){
 
         // 오프라인일 때만 지역 정보가 필수이므로 폼 에러를 동적으로 제어
-        if(form.getMethod() != StudyMethod.ONLINE &&
-                ((form.getRegion() == null || form.getRegion().trim().isBlank()))){
+        if(form.getMethod() == StudyMethod.OFFLINE
+                && (form.getRegion() == null || form.getRegion().isBlank())){
             bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
         }
 
@@ -123,8 +124,8 @@ public class StudyController {
                        @Login LoginMemberSession loginMember,
                        @PathVariable Long studyId){
 
-        if(form.getMethod() != StudyMethod.ONLINE &&
-                (form.getRegion() == null || form.getRegion().trim().isBlank())){
+        if(form.getMethod() == StudyMethod.OFFLINE
+                && (form.getRegion() == null || form.getRegion().isBlank())){
             bindingResult.rejectValue("region", "required", "지역을 입력해주세요.");
         }
 
@@ -140,18 +141,38 @@ public class StudyController {
 
     // 스터디 신청
     @PostMapping("{studyId}/apply")
-    public String applyForm(@RequestParam String message,
-                            @PathVariable Long studyId,
-                            @Login LoginMemberSession loginMember,
-                            RedirectAttributes redirectAttributes){
+    public String applyForm(
+            @Validated @ModelAttribute("applicationForm") StudyApplicationForm form,
+            BindingResult bindingResult,
+            @PathVariable Long studyId,
+            @Login LoginMemberSession loginMember,
+            RedirectAttributes redirectAttributes){
+
+        if(bindingResult.hasErrors()){
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    bindingResult.getAllErrors().get(0).getDefaultMessage()
+            );
+
+            // 오류 후 다시 신청 했을 때 입력 내용 복원
+            redirectAttributes.addFlashAttribute(
+                    "applicationDraft",
+                    form.getMessage()
+            );
+
+            return "redirect:/studies/" + studyId;
+        }
+
 
 
         // 신청 성공 여부에 따라 사용자에게 결과 보여줌
         try{
-            applicationService.applyToStudy(loginMember.id(), studyId, message);
+            applicationService.applyToStudy(loginMember.id(), studyId, form.getMessage());
             redirectAttributes.addFlashAttribute("successMessage", "스터디 신청이 완료되었습니다.");
         }catch(BusinessRuleException e){
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("applicationDraft", form.getMessage()
+            );
         }
 
         return "redirect:/studies/" + studyId;

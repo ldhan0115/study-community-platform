@@ -2,6 +2,7 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.exception.DuplicateMemberException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.service.dto.MemberUpdateDto;
@@ -29,7 +30,8 @@ public class MemberService {
 
         // 회원가입 전에 loginId, email, nickname 중복 여부 검사
         validateDuplicateMember(member);
-        memberRepository.save(member);
+        // 실제 DB 저장까지 진행해 UNIQUE 제약 위반 확인
+        memberRepository.saveAndFlush(member);
         return member.getId();
     }
 
@@ -65,6 +67,10 @@ public class MemberService {
                 updateDto.nickname()
         );
 
+        // 수정 SQL을 DB에 보내 UNIQUE 제약 위반 확인
+        // 실패하면 예외가 밖으로 전달되고 트랜잭션 롤백
+        memberRepository.flush();
+
         // Controller에서 수정된 영속 엔티티로 세션을 갱신하도록 반환
         return findMember;
     }
@@ -80,15 +86,15 @@ public class MemberService {
     // loginId, email, nickname 중복 여부 검증 (existsBy 적용)
     private void validateDuplicateMember(Member member) {
         if(memberRepository.existsByLoginId(member.getLoginId())){
-            throw new IllegalStateException(("동일한 ID가 존재합니다."));
+            throw new DuplicateMemberException("loginId", "동일한 ID가 존재합니다.");
         }
 
         if(memberRepository.existsByEmail(member.getEmail())){
-            throw new IllegalStateException("동일한 EMAIL이 존재합니다.");
+            throw new DuplicateMemberException("email", "동일한 EMAIL이 존재합니다.");
         }
 
         if(memberRepository.existsByNickname(member.getNickname())){
-            throw new IllegalStateException("동일한 NICKNAME이 존재합니다.");
+            throw new DuplicateMemberException("nickname", "동일한 NICKNAME이 존재합니다.");
         }
     }
 
@@ -97,17 +103,17 @@ public class MemberService {
     private void validateDuplicateMemberForEdit(Member findMember, MemberUpdateDto updateDto){
         if(!findMember.getLoginId().equals(updateDto.loginId())
             && memberRepository.existsByLoginId(updateDto.loginId())){
-            throw new IllegalStateException(("동일한 ID가 존재합니다."));
+            throw new DuplicateMemberException("loginId", "동일한 ID가 존재합니다.");
         }
 
         if(!findMember.getEmail().equals(updateDto.email())
                 && memberRepository.existsByEmail(updateDto.email())){
-            throw new IllegalStateException("동일한 EMAIL이 존재합니다.");
+            throw new DuplicateMemberException("email", "동일한 EMAIL이 존재합니다.");
         }
 
         if(!findMember.getNickname().equals(updateDto.nickname())
                 && memberRepository.existsByNickname(updateDto.nickname())){
-            throw new IllegalStateException("동일한 NICKNAME이 존재합니다.");
+            throw new DuplicateMemberException("nickname", "동일한 NICKNAME이 존재합니다.");
         }
     }
 }

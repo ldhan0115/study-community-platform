@@ -1,9 +1,11 @@
 package com.study.study_community_platform.controller.web.study;
 
+import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.domain.StudyMethod;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +13,7 @@ import lombok.Setter;
 public class RegisterStudyForm {
 
     @NotBlank(message = "스터디 제목을 입력해주세요.")
+    @Size(max = Study.MAX_TITLE_LENGTH, message = "스터디 제목은 {max}자 이하로 입력해주세요.")
     private String title;
 
     @Min(value = 1, message = "모집 인원은 1명 이상이어야 합니다.")
@@ -19,8 +22,10 @@ public class RegisterStudyForm {
     @NotNull(message = "진행 방식을 선택해주세요.")
     private StudyMethod method;
 
+    @Size(max = Study.MAX_REGION_LENGTH, message = "지역은 {max}자 이하로 입력해주세요.")
     private String region;
 
     @NotBlank(message = "스터디 소개를 입력해주세요.")
+    @Size(max = Study.MAX_CONTENT_LENGTH, message = "스터디 소개는 {max}자 이하로 입력해주세요.")
     private String content;
 }

@@ -1,5 +1,6 @@
 package com.study.study_community_platform.domain;
 
+import com.study.study_community_platform.exception.BusinessRuleException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,6 +17,10 @@ import static jakarta.persistence.FetchType.LAZY;
 @SQLRestriction("deleted_at is NULL")
 public class Study {
 
+    public static final int MAX_TITLE_LENGTH = 255;
+    public static final int MAX_REGION_LENGTH = 50;
+    public static final int MAX_CONTENT_LENGTH = 10000;
+
     // 스터디의 기본 키 (PK)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +33,7 @@ public class Study {
     private Member member;
 
     // 스터디 모집글 제목
-    @Column(name = "study_title", nullable = false, length = 255)
+    @Column(name = "study_title", nullable = false, length = MAX_TITLE_LENGTH)
     private String title;
 
     // 본문은 길어질 수 있으므로 LOB으로 저장
@@ -42,7 +47,7 @@ public class Study {
     private StudyMethod method;
 
     // 오프라인 스터디일 경우 지역 정보
-    @Column(length = 50)
+    @Column(length = MAX_REGION_LENGTH)
     private String region;
 
     // 모집 정원
@@ -83,6 +88,8 @@ public class Study {
     public static Study createStudy(Member member, String title, String content,
                                     StudyMethod method, String region, int capacity) {
 
+        validateStudyInfo(title, content, method, region, capacity);
+
         // 제목 필수 검증
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("스터디 제목은 필수입니다.");
@@ -120,6 +127,8 @@ public class Study {
     public void changeStudyInfo(String title, String content,
                                 StudyMethod method, String region, int capacity) {
 
+        validateStudyInfo(title, content, method, region, capacity);
+
         // 수정 시에도 생성 때와 동일한 검증 수행
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("스터디 제목은 필수입니다.");
@@ -141,6 +150,43 @@ public class Study {
 
         this.capacity = capacity;
 
+    }
+
+    private static void validateStudyInfo(String title, String content,
+                                          StudyMethod method, String region, int capacity){
+        if(title == null || title.isBlank()){
+            throw new BusinessRuleException("스터디 제목은 필수입니다.");
+        }
+
+        if (title.length() > MAX_TITLE_LENGTH) {
+            throw new BusinessRuleException("스터디 제목은 " + MAX_TITLE_LENGTH + "자 이하로 입력해주세요.");
+        }
+
+        if (content == null || content.isBlank()) {
+            throw new BusinessRuleException("스터디 소개는 필수입니다.");
+        }
+
+        if (content.length() > MAX_CONTENT_LENGTH) {
+            throw new BusinessRuleException("스터디 소개는 " + MAX_CONTENT_LENGTH + "자 이하로 입력해주세요.");
+        }
+
+        if (method == null) {
+            throw new BusinessRuleException("진행 방식을 선택해주세요.");
+        }
+
+        if (region != null && region.length() > MAX_REGION_LENGTH) {
+            throw new BusinessRuleException("지역은 " + MAX_REGION_LENGTH + "이하로 입력해주세요.");
+        }
+
+        // 오프라인일 때만 지역 검사
+        if (method == StudyMethod.OFFLINE
+                && (region == null || region.isBlank())) {
+            throw new BusinessRuleException("지역을 입력해주세요.");
+        }
+
+        if (capacity < 1) {
+            throw new BusinessRuleException("모집 인원은 1명 이상이어야 합니다.");
+        }
     }
 
     // 모집 마감 처리
