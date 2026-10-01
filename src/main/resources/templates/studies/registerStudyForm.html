@@ -87,7 +87,9 @@
 
                         <div class="mb-4">
                             <label th:for="title" class="form-label">모집 공고 제목</label>
-                            <input type="text" th:field="*{title}" class="form-control form-control-lg"
+                            <input type="text" th:field="*{title}"
+                                   class="form-control form-control-lg"
+                                   maxlength="255"
                                    th:errorclass="is-invalid" placeholder="예) 스프링 핵심 원리 스터디원 모집합니다">
                             <div class="invalid-feedback" th:errors="*{title}">제목 오류 메시지</div>
                         </div>
@@ -120,7 +122,9 @@
                             </div>
                             <div class="col-md-6">
                                 <label th:for="region" class="form-label">진행 지역 (Region)</label>
-                                <input type="text" th:field="*{region}" class="form-control"
+                                <input type="text" th:field="*{region}"
+                                       class="form-control"
+                                       maxlength="50"
                                        th:errorclass="is-invalid" placeholder="예) 서울 강남구 (온라인인 경우 '온라인' 입력)">
                                 <div class="invalid-feedback" th:errors="*{region}">지역 오류 메시지</div>
                             </div>
@@ -130,7 +134,10 @@
                     <div class="mb-5">
                         <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-pencil-square me-2"></i>스터디 소개 (Content)</h5>
                         <div class="mb-3">
-                            <textarea th:field="*{content}" class="form-control" th:errorclass="is-invalid" rows="8"
+                            <textarea th:field="*{content}"
+                                      class="form-control"
+                                      maxlength="10000"
+                                      th:errorclass="is-invalid" rows="8"
                                       placeholder="스터디 목표, 커리큘럼, 활동 내용 등을 상세히 적어주세요."></textarea>
                             <div class="invalid-feedback" th:errors="*{content}">본문 오류 메시지</div>
                         </div>

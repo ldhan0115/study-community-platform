@@ -15,6 +15,8 @@ import static jakarta.persistence.FetchType.LAZY;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Application {
 
+    public static final int MAX_MESSAGE_LENGTH = 255;
+
     // 신청의 기본키 (PK)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +34,7 @@ public class Application {
     private Study study;
 
     // 신청 시 남기는 메시지
-    @Column(length = 255)
+    @Column(length = MAX_MESSAGE_LENGTH)
     private String message;
 
     // 신청 상태
@@ -67,8 +69,10 @@ public class Application {
 
     // 신청 생성 메서드
     public static Application createApplication(Member member, Study study, String message){
-        Application application = new Application();
 
+        validateMessage(message);
+
+        Application application = new Application();
         application.member = member;
         application.study = study;
         application.message = message;
@@ -102,6 +106,21 @@ public class Application {
     public void validatePendingStatus(){
         if(this.status != ApplicationStatus.PENDING){
             throw new BusinessRuleException("대기 중인 신청만 상태를 변경할 수 있습니다.");
+        }
+    }
+
+    private static void validateMessage(String message) {
+
+        if (message == null || message.isBlank()) {
+            throw new BusinessRuleException(
+                    "신청 메시지를 입력해주세요."
+            );
+        }
+
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            throw new BusinessRuleException(
+                    "신청 메시지는 255자 이하여야 합니다."
+            );
         }
     }
 

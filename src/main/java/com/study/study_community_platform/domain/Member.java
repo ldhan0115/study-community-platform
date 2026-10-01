@@ -1,5 +1,6 @@
 package com.study.study_community_platform.domain;
 
+import com.study.study_community_platform.exception.BusinessRuleException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,6 +13,9 @@ import java.time.LocalDateTime;
 // JPA에서 사용하는 기본 생성자, 외부에서 직접 생성하는 것을 방지
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
+
+    // 이메일 최대 길이
+    public static final int MAX_EMAIL_LENGTH = 100;
 
     // 회원의 기본 키 (PK)
     @Id
@@ -28,7 +32,7 @@ public class Member {
     private String password;
 
     // 이메일 (회원 식별 및 알림 등에 사용)
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true, length = MAX_EMAIL_LENGTH)
     private String email;
 
     // 커뮤니티에서 표시되는 닉네임
@@ -49,6 +53,10 @@ public class Member {
 
     // 회원 객체 생성 시 사용하는 생성자
      public static Member createMember(String loginId, String password, String email, String nickname) {
+
+         // 웹 폼을 거치지 않는 호출에서도 이메일 저장 규칙 검사
+         validateEmail(email);
+
          Member member = new Member();
          member.loginId = loginId;
          member.password = password;
@@ -59,10 +67,24 @@ public class Member {
 
     // 회원 정보 수정 메서드
     public void changeMemberInfo(String loginId, String password, String email, String nickname){
+
+        // 정보 수정 전에 검사
+         validateEmail(email);
+
         this.loginId = loginId;
         this.password = password;
         this.email = email;
         this.nickname = nickname;
+    }
+
+    private static void validateEmail(String email){
+         if(email == null || email.isBlank()){
+             throw new BusinessRuleException("이메일은 필수입니다.");
+         }
+
+         if(email.length() > MAX_EMAIL_LENGTH){
+             throw new BusinessRuleException("이메일은" + MAX_EMAIL_LENGTH + "자 이하로 입력해주세요.");
+         }
     }
 
     // 회원 객체가 저장되기 직전에 생성/수정 시간을 세팅

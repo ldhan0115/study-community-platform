@@ -2,6 +2,7 @@ package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.exception.DuplicateMemberException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,7 @@ class MemberServiceTest {
         // when & then
         // 동일한 loginId로 가입 시 예외가 발생해야 함
         assertThatThrownBy(() -> memberService.join(form2))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(DuplicateMemberException.class);
     }
 
     @Test
@@ -66,7 +67,7 @@ class MemberServiceTest {
         // when & then
         // 동일한 email로 가입 시 예외가 발생해야 함
         assertThatThrownBy(() -> memberService.join(form2))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(DuplicateMemberException.class);
     }
 
     @Test
@@ -80,7 +81,7 @@ class MemberServiceTest {
         // when & then
         // 동일한 nickname으로 가입 시 예외가 발생해야 함
         assertThatThrownBy(() -> memberService.join(form2))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(DuplicateMemberException.class);
     }
 
     @Test
@@ -165,7 +166,7 @@ class MemberServiceTest {
         //when & then
         assertThatThrownBy(() ->
                 memberService.join(secondJoinForm)
-        ).isInstanceOf(IllegalStateException.class)
+        ).isInstanceOf(DuplicateMemberException.class)
                 .hasMessage("동일한 ID가 존재합니다.");
 
     }

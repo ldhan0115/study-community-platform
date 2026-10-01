@@ -64,7 +64,7 @@ class StudyServiceTest {
         //when&then
         assertThatThrownBy(() -> studyService.registerStudy(member.getId(), null,
                 "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 5))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("스터디 제목은 필수입니다.");
 
     }
@@ -78,7 +78,7 @@ class StudyServiceTest {
         //when&then
         assertThatThrownBy(() -> studyService.registerStudy(member.getId(), "JPA",
                 "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 0))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("모집 인원은 1명 이상이어야 합니다.");
     }
 

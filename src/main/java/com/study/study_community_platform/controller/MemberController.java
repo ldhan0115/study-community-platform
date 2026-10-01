@@ -7,12 +7,15 @@ import com.study.study_community_platform.controller.web.SessionConst;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Member;
+import com.study.study_community_platform.exception.DuplicateMemberException;
 import com.study.study_community_platform.service.MemberService;
 import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -36,33 +39,27 @@ public class MemberController {
 
     // 회원가입
     @PostMapping("/join")
-    public String join(@Validated @ModelAttribute("member") JoinMemberForm form, BindingResult bindingResult){
+    public String join(@Validated @ModelAttribute("member") JoinMemberForm form, BindingResult bindingResult) {
 
         // 필드 검증 실패 시 회원가입 화면 다시 이동
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             return "members/joinMemberForm";
         }
 
         // 중복 검사 예외 처리
-        try{
+        try {
             memberService.join(form);
-        }catch(IllegalStateException e){
-            // service 에서 던진 메시지를 잡아냄
-            String errMessage = e.getMessage();
+        } catch (DuplicateMemberException e) {
+            bindingResult.rejectValue(
+                    e.getField(),
+                    "duplicate",
+                    e.getMessage()
+            );
 
-            // 에러 메시지 내용에 따라 해당하는 필드에 에러 매핑
-            if(errMessage.contains("ID")){
-                bindingResult.rejectValue("loginId", "duplicate", errMessage);
-            }else if(errMessage.contains("EMAIL")){
-                bindingResult.rejectValue("email", "duplicate", errMessage);
-            }else if(errMessage.contains("NICKNAME")){
-                bindingResult.rejectValue("nickname", "duplicate", errMessage);
-            }else{
-                // 그 외의 예외일 경우 글로벌 에러로 처리
-                bindingResult.reject("joinFail", errMessage);
-            }
-
-            // 에러를 담고 다시 회원가입 폼으로 이동
+            return "members/joinMemberForm";
+        } catch (DataIntegrityViolationException e) {
+            // 사전 검사 이후 DB에서 발생한 중복 충돌을 처리
+            rejectUniqueConflict(e, bindingResult);
             return "members/joinMemberForm";
         }
 
@@ -115,7 +112,24 @@ public class MemberController {
                     form.getEmail(), form.getNickname()
                 );
 
-        Member updatedMember = memberService.editMember(loginMember.id(), memberUpdateDto);
+        Member updatedMember;
+
+        try{
+            updatedMember = memberService.editMember(loginMember.id(), memberUpdateDto);
+        }catch (DuplicateMemberException e){
+            bindingResult.rejectValue(
+                    e.getField(),
+                    "duplicate",
+                    e.getMessage()
+            );
+
+            // 세션 갱신 코드에 도달하지 않으므로 기존 세션 유지
+            return "members/editMemberForm";
+
+        }catch(DataIntegrityViolationException e){
+            rejectUniqueConflict(e, bindingResult);
+            return "members/editMemberForm";
+        }
 
         // 정보 수정 완료 후 변경된 정보가 화면에 반영되도록 세션 정보 갱신
         HttpSession session = request.getSession();
@@ -142,6 +156,27 @@ public class MemberController {
         }
 
         return "redirect:/";
+    }
+
+    private void rejectUniqueConflict(DataIntegrityViolationException exception, BindingResult bindingResult){
+        Throwable cause = exception;
+
+        // Spring이 감싼 예외 안에서 실제 Hibernate 제약 위반을 찾음
+        while(cause != null){
+            if(cause instanceof ConstraintViolationException violation &&
+                    violation.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE){
+
+                // DB 충돌에서는 필드를 추측하지 않고 폼 전체 오류로 안내
+                bindingResult.reject(
+                        "duplicate.concurrent",
+                        "이미 사용 중인 회원 정보가 있습니다. 아이디, 이메일, 닉네임을 확인해주세요."
+                );
+                return;
+            }
+            cause = cause.getCause();
+        }
+        // NOT NULL, 외래키 등 다른 DB 오류를 중복으로 잘못 안내하지 않음
+        throw exception;
     }
 
 
