@@ -103,7 +103,10 @@
 
                     <th:block th:if="${app.status.name() == 'PENDING'}">
                         <form th:action="@{|/applications/${app.id}/approve|}" method="post" class="w-100 m-0">
-                            <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" onclick="return confirm('이 지원자를 스터디원으로 승인하시겠습니까?');">승인</button>
+                            <button type="submit"
+                                    class="btn btn-success w-100 fw-bold shadow-sm"
+                                    th:disabled="${study.studyStatus.name() == 'CLOSED'}"
+                                    onclick="return confirm('이 지원자를 스터디원으로 승인하시겠습니까?');">승인</button>
                         </form>
                         <form th:action="@{|/applications/${app.id}/reject|}" method="post" class="w-100 m-0">
                             <button type="submit" class="btn btn-outline-danger w-100 fw-bold" onclick="return confirm('이 지원자를 거절하시겠습니까?');">거절</button>

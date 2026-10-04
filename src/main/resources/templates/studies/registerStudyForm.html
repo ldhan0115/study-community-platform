@@ -96,7 +96,8 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label th:for="capacity" class="form-label">모집 인원 (Capacity)</label>
+                                <label th:for="capacity" class="form-label">모집 정원 </label>
+                                <div class="form-text">방장을 제외하고 승인할 수 있는 인원입니다.</div>
                                 <div class="input-group has-validation">
                                     <input type="number" th:field="*{capacity}" class="form-control"
                                            th:errorclass="is-invalid" placeholder="최대 인원 입력">

@@ -90,16 +90,6 @@ public class Study {
 
         validateStudyInfo(title, content, method, region, capacity);
 
-        // 제목 필수 검증
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("스터디 제목은 필수입니다.");
-        }
-
-        // 모집 정원 검증
-        if (capacity < 1) {
-            throw new IllegalArgumentException("모집 인원은 1명 이상이어야 합니다.");
-        }
-
         Study study = new Study();
 
         // 스터디 기본 정보 설정
@@ -125,18 +115,11 @@ public class Study {
 
     // 스터디 정보 수정 메서드
     public void changeStudyInfo(String title, String content,
-                                StudyMethod method, String region, int capacity) {
+                                StudyMethod method, String region, int capacity, long approvedCount) {
 
         validateStudyInfo(title, content, method, region, capacity);
 
-        // 수정 시에도 생성 때와 동일한 검증 수행
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("스터디 제목은 필수입니다.");
-        }
-
-        if (capacity < 1) {
-            throw new IllegalArgumentException("모집 인원은 1명 이상이어야 합니다.");
-        }
+        validateCapacity(capacity, approvedCount);
 
         this.title = title;
         this.content = content;
@@ -149,6 +132,7 @@ public class Study {
         }
 
         this.capacity = capacity;
+        updateRecruitmentStatus(approvedCount);
 
     }
 
@@ -189,13 +173,36 @@ public class Study {
         }
     }
 
-    // 모집 마감 처리
-    public void close(){
-        studyStatus = StudyStatus.CLOSED;
-    }
-
     // 스터디 삭제 (Soft Delete) 처리
     public void withdraw(){
         this.deletedAt = LocalDateTime.now();
+    }
+
+    // 정원에 따른 모집 상태 변경
+    public void updateRecruitmentStatus(long approvedCount) {
+        validateCapacity(this.capacity, approvedCount);
+
+        // 승인 인원과 정원이 같으면 마감
+        // 정원에 여유가 있으면 모집 상태로 전환
+        this.studyStatus = (approvedCount == this.capacity) ? StudyStatus.CLOSED : StudyStatus.OPEN;
+    }
+
+    // 스터디 인원 검증
+    private static void validateCapacity(int capacity, long approvedCount) {
+        if (capacity < 1) {
+            throw new BusinessRuleException("모집 인원은 1명 이상이어야 합니다.");
+        }
+
+        if (approvedCount < 0) {
+            throw new BusinessRuleException("승인 인원은 0명 이상이어야 합니다.");
+        }
+
+        if (capacity < approvedCount) {
+            throw new BusinessRuleException(
+                    "모집 정원은 현재 승인 인원("
+                            + approvedCount
+                            + "명) 이상이어야 합니다."
+            );
+        }
     }
 }

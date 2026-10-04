@@ -154,16 +154,37 @@
                                 이미 신청한 스터디입니다
                             </button>
 
-                            <button th:unless="${isApplied}" type="button" class="btn btn-primary px-5 fw-bold shadow-sm"
-                                    data-bs-toggle="modal" data-bs-target="#applyModal">
+                            <button th:if="${!isApplied and study.studyStatus.name() == 'CLOSED'}"
+                                    type="button"
+                                    class="btn btn-secondary px-5 fw-bold shadow-sm"
+                                    disabled>
+                                모집이 마감되었습니다
+                            </button>
+
+                            <button th:if="${!isApplied and study.studyStatus.name() == 'OPEN'}"
+                                    type="button"
+                                    class="btn btn-primary px-5 fw-bold shadow-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#applyModal">
                                 신청하기
                             </button>
                         </th:block>
 
                         <th:block th:if="${session.loginMember == null}">
-                            <a th:href="@{/members/login(redirectURL=|/studies/${study.id}|)}" class="btn btn-primary px-5 fw-bold shadow-sm">
+
+                            <button th:if="${study.studyStatus.name() == 'CLOSED'}"
+                                    type="button"
+                                    class="btn btn-secondary px-5 fw-bold shadow-sm"
+                                    disabled>
+                                모집이 마감되었습니다
+                            </button>
+
+                            <a th:if="${study.studyStatus.name() == 'OPEN'}"
+                               th:href="@{/members/login(redirectURL=|/studies/${study.id}|)}"
+                               class="btn btn-primary px-5 fw-bold shadow-sm">
                                 신청하기 (로그인 필요)
                             </a>
+
                         </th:block>
                     </div>
                 </div>

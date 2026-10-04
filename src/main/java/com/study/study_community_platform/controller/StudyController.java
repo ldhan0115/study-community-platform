@@ -133,8 +133,16 @@ public class StudyController {
             return "studies/editStudyForm";
         }
 
-        studyService.updateStudy(loginMember.id(), studyId, form.getTitle(),
-                form.getContent(), form.getMethod(), form.getRegion(), form.getCapacity());
+        try{
+            studyService.updateStudy(loginMember.id(), studyId, form.getTitle(),
+                    form.getContent(), form.getMethod(), form.getRegion(), form.getCapacity());
+        }catch (BusinessRuleException e){
+            // 현재 승인 인원보다 작은 정원을 제출한 경우 등을 안내
+            // 폼을 그대로 반환하므로 사용자가 입력한 값을 다시 수정 가능
+            bindingResult.reject("study.updateFailed", e.getMessage());
+
+            return "studies/editStudyForm";
+        }
 
         return "redirect:/studies/" + studyId;
     }
