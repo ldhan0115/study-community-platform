@@ -33,6 +33,11 @@ public class ApplicationService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
+        // 화면에서 신청 버튼을 숨겼더라도 직접 요청할 수 있으므로 서버에서 검사 -> 방장이 자신의 스터디에 신청
+        if(study.getMember().getId().equals(memberId)){
+            throw new BusinessRuleException("스터디 방장은 자신의 스터디에 신청할 수 없습니다.");
+        }
+
         // 스터디 모집 상태 확인
         // CLOSED 상태라면 더 이상 신청 불가
         if(study.getStudyStatus() == StudyStatus.CLOSED){
@@ -116,13 +121,15 @@ public class ApplicationService {
             throw new BusinessRuleException("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
         }
 
+        if(study.getStudyStatus() != StudyStatus.OPEN){
+            throw new BusinessRuleException("모집 중인 스터디에서만 신청을 승인할 수 있습니다.");
+        }
+
         // 엔티티 내부 상태 변경
         application.approve();
 
-        // 승인 후 정원이 다 찼다면 스터디 자동 마감
-        if(approvedCount + 1 >= study.getCapacity()){
-            study.close();
-        }
+        // approvedCount는 이번 승인 전의 인원수 -> 지금 승인한 1명을 더한 값으로 모집 상태 갱신
+        study.updateRecruitmentStatus(approvedCount + 1);
     }
 
     // 스터디 신청 거절

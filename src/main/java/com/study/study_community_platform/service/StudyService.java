@@ -1,10 +1,9 @@
 package com.study.study_community_platform.service;
 
-import com.study.study_community_platform.domain.Member;
-import com.study.study_community_platform.domain.Study;
-import com.study.study_community_platform.domain.StudyMethod;
+import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
+import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +19,7 @@ public class StudyService {
 
     private final StudyRepository studyRepository;
     private final MemberRepository memberRepository;
+    private final ApplicationRepository applicationRepository;
 
     // 스터디 등록
     @Transactional
@@ -74,8 +74,11 @@ public class StudyService {
         // 엔티티를 변경하기 전에 작성자를 검증
         validateStudyOwner(loginMemberId, findStudy);
 
+        // 승인 인원을 클라이언트 값이 아닌 DB에서 조회해서 사용
+        long approvedCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED);
+
         // 조회한 기존 엔티티의 값만 변경해서 JPA dirty checking으로 반영
-        findStudy.changeStudyInfo(title, content, method, region, capacity);
+        findStudy.changeStudyInfo(title, content, method, region, capacity, approvedCount);
     }
 
     // 스터디 삭제
@@ -89,12 +92,4 @@ public class StudyService {
         study.withdraw();
     }
 
-    // 스터디 모집 마감 처리
-    @Transactional
-    public void closeStudy(Long studyId){
-        Study study = findStudy(studyId);
-
-        // 스터디 객체 내부에 비즈니스 로직 위치
-        study.close();
-    }
 }

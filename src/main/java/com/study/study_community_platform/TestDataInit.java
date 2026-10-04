@@ -9,6 +9,7 @@ import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.CommentRepository;
 import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
+import com.study.study_community_platform.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
@@ -27,6 +28,7 @@ public class TestDataInit {
     private final CommentRepository commentRepository;
     private final ApplicationRepository applicationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationService applicationService;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
@@ -187,8 +189,6 @@ public class TestDataInit {
                 3
         );
 
-        // README에서 모집 마감 상태를 보여주기 위한 데이터
-        closedStudy.close();
 
         studyRepository.saveAll(
                 java.util.List.of(
@@ -328,5 +328,20 @@ public class TestDataInit {
                         myApplication
                 )
         );
+
+        // closedStudy의 방장은 member6이고 정원은 3명
+        // 실제로 3명을 승인해 자동 마감된 샘플을 만든다.
+        for (Member applicant : java.util.List.of(member1, member2, member3)) {
+            Long applicationId = applicationService.applyToStudy(
+                    applicant.getId(),
+                    closedStudy.getId(),
+                    "Spring Security 스터디에 참여하고 싶습니다."
+            );
+
+            applicationService.approveApplication(
+                    member6.getId(),
+                    applicationId
+            );
+        }
     }
 }

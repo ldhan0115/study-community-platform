@@ -35,21 +35,25 @@ class ApplicationServiceTest {
 
     @Test
     void applyToStudy() {
+
         // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
-        memberRepository.save(member);
+        Member owner = saveTestMember("owner");
+        Member applicant = saveTestMember("applicant");
+        Study study = saveTestStudy(owner, 5);
 
-        Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
-        studyRepository.save(study);
+        // when
+        Long applicationId = applicationService.applyToStudy(
+                applicant.getId(),
+                study.getId(),
+                "열심히 참여하겠습니다."
+        );
 
-        //when
-        Long applicationId = applicationService.applyToStudy(member.getId(), study.getId(), "열심히 하겠습니다.");
+        Application application = applicationService.findApplication(applicationId);
 
-        //then
-        Application findApplication = applicationService.findApplication(applicationId);
-        assertThat(findApplication.getMember()).isEqualTo(member);
-        assertThat(findApplication.getStudy()).isEqualTo(study);
-        assertThat(findApplication.getStatus()).isEqualTo(ApplicationStatus.PENDING);
+        // then
+        assertThat(application.getMember().getId()).isEqualTo(applicant.getId());
+        assertThat(application.getStudy().getId()).isEqualTo(study.getId());
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.PENDING);
     }
 
     @Test
@@ -188,19 +192,33 @@ class ApplicationServiceTest {
 
     @Test
     void closeStudyApplication() {
+
         // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
-        memberRepository.save(member);
+        Member owner = saveTestMember("owner");
+        Member firstApplicant = saveTestMember("applicant1");
+        Member secondApplicant = saveTestMember("applicant2");
+        Study study = saveTestStudy(owner, 1);
 
-        Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
-        studyRepository.save(study);
+        // when
+        Long applicationId = applicationService.applyToStudy(
+                firstApplicant.getId(),
+                study.getId(),
+                "신청합니다."
+        );
 
-        study.close();
+        applicationService.approveApplication(owner.getId(), applicationId);
 
-        //when
-        assertThatThrownBy(() -> applicationService.applyToStudy(member.getId(), study.getId(), "열심히 하겠습니다."))
+        // then
+        assertThat(study.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
+
+        assertThatThrownBy(() -> applicationService.applyToStudy(
+                secondApplicant.getId(),
+                study.getId(),
+                "추가 신청합니다."
+        ))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("모집이 마감된 스터디입니다.");
+
     }
 
     @Test
@@ -230,70 +248,69 @@ class ApplicationServiceTest {
 
     @Test
     void sameApplication() {
+
         // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
-        memberRepository.save(member);
+        Member owner = saveTestMember("owner");
+        Member applicant = saveTestMember("applicant");
+        Study study = saveTestStudy(owner, 5);
 
-        Study study = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
-        studyRepository.save(study);
+        // when
+        applicationService.applyToStudy(
+                applicant.getId(),
+                study.getId(),
+                "신청합니다."
+        );
 
-        applicationService.applyToStudy(member.getId(), study.getId(), "열심히 하겠습니다.");
 
-        //when
-        assertThatThrownBy(() -> applicationService.applyToStudy(member.getId(), study.getId(), "또 왔어요"))
+        // then
+        assertThatThrownBy(() -> applicationService.applyToStudy(
+                applicant.getId(),
+                study.getId(),
+                "다시 신청합니다."
+        ))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("신청 대기 중이거나 이미 승인된 스터디입니다.");
     }
 
     @Test
     void findApplicationByStudy() {
+
         // given
-        Member member1 = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
-        Member member2 = Member.createMember("test2", "1234", "test2@gmail.com", "tester2");
-        memberRepository.save(member1);
-        memberRepository.save(member2);
+        Member owner = saveTestMember("owner");
+        Member firstApplicant = saveTestMember("applicant1");
+        Member secondApplicant = saveTestMember("applicant2");
+        Study study = saveTestStudy(owner, 5);
 
-        Study study = Study.createStudy(member1, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
-        studyRepository.save(study);
+        Long firstId = applicationService.applyToStudy(firstApplicant.getId(), study.getId(), "첫 번째 신청");
+        Long secondId = applicationService.applyToStudy(secondApplicant.getId(), study.getId(), "두 번째 신청");
 
-        Long applicationId1 = applicationService.applyToStudy(member1.getId(), study.getId(), "member1");
-        Long applicationId2 = applicationService.applyToStudy(member2.getId(), study.getId(), "member2");
+        // when
+        List<Application> applications = applicationService.findApplicationsByStudy(study.getId());
 
-        Application application1 = applicationService.findApplication(applicationId1);
-        Application application2 = applicationService.findApplication(applicationId2);
-
-        //when
-        List<Application> applicationsByStudy = applicationService.findApplicationsByStudy(study.getId());
-
-        //then
-        assertThat(applicationsByStudy.size()).isEqualTo(2);
-        assertThat(applicationsByStudy).contains(application1, application2);
+        // then
+        assertThat(applications)
+                .extracting(Application::getId)
+                .containsExactlyInAnyOrder(firstId, secondId);
     }
 
     @Test
     void findApplicationsByMember() {
+
         // given
-        Member member = Member.createMember("test1", "1234", "test1@gmail.com", "tester1");
-        memberRepository.save(member);
+        Member owner = saveTestMember("owner");
+        Member applicant = saveTestMember("applicant");
 
-        Study study1 = Study.createStudy(member, "JPA", "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
-        studyRepository.save(study1);
+        Study firstStudy = saveTestStudy(owner, 5);
+        Study secondStudy = saveTestStudy(owner, 5);
 
-        Study study2 = Study.createStudy(member, "JPA", "SPRING을 열심히 공부해요", StudyMethod.OFFLINE, "서울", 10);
-        studyRepository.save(study2);
+        Long firstId = applicationService.applyToStudy(applicant.getId(), firstStudy.getId(), "첫 번째 스터디 신청");
+        Long secondId = applicationService.applyToStudy(applicant.getId(), secondStudy.getId(), "두 번째 스터디 신청");
 
+        List<Application> applications = applicationService.findApplicationsByMember(applicant.getId());
 
-        Long applicationId1 = applicationService.applyToStudy(member.getId(), study1.getId(), "화이팅");
-        Long applicationId2 = applicationService.applyToStudy(member.getId(), study2.getId(), "화이팅");
-
-        //when
-        List<Application> applicationsByMember = applicationService.findApplicationsByMember(member.getId());
-
-        //then
-        assertThat(applicationsByMember.size()).isEqualTo(2);
-        assertThat(applicationsByMember)
-                .extracting(application -> application.getMember().getId())
-                .containsOnly(member.getId());
+        assertThat(applications)
+                .extracting(Application::getId)
+                .containsExactlyInAnyOrder(firstId, secondId);
     }
 
     @Test
@@ -358,6 +375,26 @@ class ApplicationServiceTest {
                 .hasMessage("대기 중인 신청만 상태를 변경할 수 있습니다.");
 
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED);
+    }
+
+    // 로그인 자체를 검사하지 않는 서비스 테스트용 회원
+    private Member saveTestMember(String loginId){
+        return memberRepository.save(Member.createMember(
+                loginId,
+                "test-password",
+                loginId + "@test.com",
+                loginId));
+    }
+
+    private Study saveTestStudy(Member owner, int capacity){
+        return studyRepository.save(Study.createStudy(
+                owner,
+                "JPA",
+                "JPA를 공부합니다.",
+                StudyMethod.ONLINE,
+                null,
+                capacity
+        ));
     }
 
 }
