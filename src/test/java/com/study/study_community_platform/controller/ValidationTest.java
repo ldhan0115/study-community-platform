@@ -413,7 +413,8 @@ public class ValidationTest {
                 "바뀌면 안되는 본문",
                 StudyMethod.OFFLINE,
                 "가".repeat(51),
-                10
+                10,
+                0L
         )).isInstanceOf(BusinessRuleException.class);
 
         assertThat(study.getTitle()).isEqualTo("기존 제목");

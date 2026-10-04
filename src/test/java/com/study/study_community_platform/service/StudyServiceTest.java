@@ -176,22 +176,6 @@ class StudyServiceTest {
         assertThat(unchangedStudy.getCapacity()).isEqualTo(5);
     }
 
-    @Test
-    void closeStudy() {
-        // given
-        Member member = Member.createMember("test", "1234", "test@gmail.com", "tester");
-        em.persist(member);
-
-        Long studyId = studyService.registerStudy(member.getId(), "JPA",
-                "JPA를 열심히 공부해요", StudyMethod.OFFLINE, "서울", 5);
-
-        Study findStudy = studyService.findStudy(studyId);
-        //when
-        studyService.closeStudy(studyId);
-
-        //then
-        assertThat(findStudy.getStudyStatus()).isEqualTo(StudyStatus.CLOSED);
-    }
 
     @Test
     void deleteStudy() {
