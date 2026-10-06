@@ -11,11 +11,14 @@ import com.study.study_community_platform.exception.DuplicateMemberException;
 import com.study.study_community_platform.service.MemberService;
 import com.study.study_community_platform.service.dto.MemberUpdateDto;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -146,14 +149,18 @@ public class MemberController {
 
     // 회원 탈퇴
     @PostMapping("/withdraw")
-    public String withdraw(@Login LoginMemberSession loginMember, HttpServletRequest request){
+    public String withdraw(@Login LoginMemberSession loginMember,
+                           HttpServletRequest request,
+                           HttpServletResponse response){
 
         memberService.withdrawMember(loginMember.id());
 
-        HttpSession session = request.getSession(false);
-        if(session != null){
-            session.invalidate();
-        }
+        // 탈퇴를 수행한 현재 요청의 인증 정보와 세션을 함께 정리
+        new SecurityContextLogoutHandler().logout(
+                request,
+                response,
+                SecurityContextHolder.getContext().getAuthentication()
+        );
 
         return "redirect:/";
     }

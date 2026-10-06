@@ -6,7 +6,6 @@ import com.study.study_community_platform.domain.Study;
 import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.CommentRepository;
-import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,19 +19,18 @@ import java.util.List;
 public class CommentService {
 
     private final CommentRepository commentRepository;
-    private final MemberRepository memberRepository;
     private final StudyRepository studyRepository;
+    private final ActiveMemberService activeMemberService;
 
     // 댓글 등록
     @Transactional
     public Long registerComment(Long memberId, Long studyId, String content) {
 
         // 댓글 작성 회원 존재 여부 확인
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다."));
+        Member member = activeMemberService.requireActive(memberId);
 
         // 댓글 작성 스터디 존재 여부 확인
-        Study study = studyRepository.findById(studyId)
+        Study study = studyRepository.findByIdAndDeletedAtIsNull(studyId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
         // Comment 객체 생성 메서드를 사용
@@ -44,7 +42,7 @@ public class CommentService {
 
     // 댓글 단건 조회
     public Comment findComment(Long commentId) {
-        return commentRepository.findById(commentId)
+        return commentRepository.findActiveById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
     }
 
@@ -63,12 +61,25 @@ public class CommentService {
         return commentRepository.findAll();
     }
 
+    // 스터디에 소속하는 댓글 조회
+    private Comment findCommentInStudy(Long studyId, Long commentId){
+        Comment comment = findComment(commentId);
+
+        if(!comment.getStudy().getId().equals(studyId)){
+            throw new ResourceNotFoundException("해당 스터디의 댓글을 찾을 수 없습니다.");
+        }
+
+        return comment;
+    }
+
     // 댓글 수정
     @Transactional
-    public void updateComment(Long memberId, Long commentId, String content) {
+    public void updateComment(Long memberId, Long studyId, Long commentId, String content) {
 
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
+        activeMemberService.requireActive(memberId);
+
+        // 활성 부모와 실제 소속 확인하면서 조회
+        Comment comment = findCommentInStudy(studyId, commentId);
 
         if(!comment.getMember().getId().equals(memberId)){
             throw new ForbiddenOperationException("댓글 수정 권한이 없습니다.");
@@ -79,10 +90,11 @@ public class CommentService {
 
     // 댓글 삭제
     @Transactional
-    public void deleteComment(Long memberId, Long commentId) {
-        Comment comment = commentRepository
-                .findById(commentId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
+    public void deleteComment(Long memberId, Long studyId, Long commentId) {
+
+        activeMemberService.requireActive(memberId);
+
+        Comment comment = findCommentInStudy(studyId, commentId);
 
         if(!comment.getMember().getId().equals(memberId)){
             throw new ForbiddenOperationException("댓글 삭제 권한이 없습니다.");

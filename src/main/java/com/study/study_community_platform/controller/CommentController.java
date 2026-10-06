@@ -89,6 +89,7 @@ public class CommentController {
 
         commentService.updateComment(
                 loginMember.id(),
+                studyId,
                 commentId,
                 form.getContent()
         );
@@ -109,7 +110,7 @@ public class CommentController {
                                 @PathVariable Long commentId){
 
         // 내가 쓴 댓글 일때만 삭제
-        commentService.deleteComment(loginMember.id(), commentId);
+        commentService.deleteComment(loginMember.id(), studyId, commentId);
 
         return "redirect:/studies/"+studyId;
     }

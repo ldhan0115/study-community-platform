@@ -5,7 +5,6 @@ import com.study.study_community_platform.exception.BusinessRuleException;
 import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.ApplicationRepository;
-import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,18 +18,17 @@ import java.util.List;
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
-    private final MemberRepository memberRepository;
     private final StudyRepository studyRepository;
+    private final ActiveMemberService activeMemberService;
 
     @Transactional
     public Long applyToStudy(Long memberId, Long studyId, String message){
 
         // 신청을 하는 회원 존재 여부 확인
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다."));
+        Member member = activeMemberService.requireActive(memberId);
 
         // 신청 대상 스터디 존재 여부 확인
-        Study study = studyRepository.findById(studyId)
+        Study study = studyRepository.findByIdAndDeletedAtIsNull(studyId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
         // 화면에서 신청 버튼을 숨겼더라도 직접 요청할 수 있으므로 서버에서 검사 -> 방장이 자신의 스터디에 신청
@@ -67,7 +65,7 @@ public class ApplicationService {
 
     // 신청 단건 조회
     public Application findApplication(Long applicationId){
-        return applicationRepository.findById(applicationId)
+        return applicationRepository.findActiveById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 신청입니다."));
     }
 
@@ -104,6 +102,8 @@ public class ApplicationService {
     @Transactional
     public void approveApplication(Long loginMemberId, Long applicationId){
 
+        activeMemberService.requireActive(loginMemberId);
+
         // 신청 엔티티 및 해당하는 스터디 엔티티 조회
         Application application = findApplication(applicationId);
 
@@ -136,6 +136,8 @@ public class ApplicationService {
     @Transactional
     public void rejectApplication(Long loginMemberId, Long applicationId){
 
+        activeMemberService.requireActive(loginMemberId);
+
         Application application = findApplication(applicationId);
 
         // Application과 연결된 실제 Study의 작성자만 해당 신청 거절 가능
@@ -147,6 +149,8 @@ public class ApplicationService {
     // 스터디 신청 취소
     @Transactional
     public void cancelApplication(Long loginMemberId, Long applicationId) {
+
+        activeMemberService.requireActive(loginMemberId);
 
         Application application = findApplication(applicationId);
 

@@ -1,6 +1,8 @@
 package com.study.study_community_platform.config;
 
+import com.study.study_community_platform.config.security.ActiveMemberFilter;
 import com.study.study_community_platform.config.security.LoginSuccessHandler;
+import com.study.study_community_platform.service.ActiveMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +11,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
 
@@ -18,6 +21,7 @@ import static org.springframework.security.web.util.matcher.RegexRequestMatcher.
 public class SecurityConfig {
 
     private final LoginSuccessHandler loginSuccessHandler;
+    private final ActiveMemberService activeMemberService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -115,6 +119,12 @@ public class SecurityConfig {
                                 fixation.changeSessionId()
                         )
                 );
+
+        // 인증 정보가 준비된 뒤 URL 접근 권한 검사 전에 활성 회원인지 확인
+        http.addFilterBefore(
+                new ActiveMemberFilter(activeMemberService),
+                AuthorizationFilter.class
+        );
 
         return http.build();
     }

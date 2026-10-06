@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
@@ -29,4 +30,14 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     );
 
     long countByStudyIdAndStatus(Long studyId, ApplicationStatus status);
+
+    // 부모 스터디가 활성 상태인 신청만 조회
+    // Study를 함께 조회해서 이후 부모 접근을 지연 로딩 예외에 맡기지 않음
+    @Query("""
+            select a from Application a
+            join fetch a.study s 
+            where a.id = :applicationId
+            and s.deletedAt is null
+            """)
+    Optional<Application> findActiveById(@Param("applicationId") Long applicationId);
 }

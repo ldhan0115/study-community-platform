@@ -50,6 +50,12 @@
 
           <form th:action="@{/members/login}" th:object="${member}" method="post">
 
+              <div th:if="${param.withdrawn}"
+                   class="alert alert-warning"
+                   role="alert">
+                  탈퇴한 계정으로 확인되어 로그아웃되었습니다.
+              </div>
+
             <!-- 로그인 실패 시 URL에 error 파라미터 추가 -->
             <div th:if="${param.error}"
                  class="alert alert-danger border-0 small py-2 text-center mb-4"
