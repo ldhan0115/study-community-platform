@@ -107,7 +107,7 @@ class CommentServiceTest {
         Long commentId = commentService.registerComment(member.getId(), study.getId(), "화이팅!!");
 
         //when
-        commentService.updateComment(member.getId(), commentId, "Fighting!!");
+        commentService.updateComment(member.getId(), study.getId(), commentId, "Fighting!!");
         Comment findComment = commentService.findComment(commentId);
 
         //then
@@ -129,7 +129,7 @@ class CommentServiceTest {
         Long commentId2 = commentService.registerComment(member.getId(), study.getId(), "Fighting!!");
 
         //when
-        commentService.deleteComment(member.getId(), commentId1);
+        commentService.deleteComment(member.getId(), study.getId(), commentId1);
         List<Comment> comments = commentService.findComments();
 
         //then
