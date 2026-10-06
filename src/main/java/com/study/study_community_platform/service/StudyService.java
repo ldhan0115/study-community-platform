@@ -4,7 +4,6 @@ import com.study.study_community_platform.domain.*;
 import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.ApplicationRepository;
-import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,8 +17,8 @@ import java.util.List;
 public class StudyService {
 
     private final StudyRepository studyRepository;
-    private final MemberRepository memberRepository;
     private final ApplicationRepository applicationRepository;
+    private final ActiveMemberService activeMemberService;
 
     // 스터디 등록
     @Transactional
@@ -27,8 +26,7 @@ public class StudyService {
                               StudyMethod method, String region, int capacity){
 
         // 스터디 작성자 조회
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다."));
+        Member member = activeMemberService.requireActive(memberId);
 
         // Study 객체 생성 메서드를 사용해 생성 규칙을 한 곳에서 관리
         Study study = Study.createStudy(member, title, content, method, region, capacity);
@@ -44,7 +42,7 @@ public class StudyService {
 
     // 스터디 단건 조회
     public Study findStudy(Long studyId){
-        return studyRepository.findById(studyId)
+        return studyRepository.findByIdAndDeletedAtIsNull(studyId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
     }
@@ -69,6 +67,8 @@ public class StudyService {
     public void updateStudy(Long loginMemberId, Long studyId,  String title, String content,
                             StudyMethod method, String region, int capacity) {
 
+        activeMemberService.requireActive(loginMemberId);
+
         Study findStudy = findStudy(studyId);
 
         // 엔티티를 변경하기 전에 작성자를 검증
@@ -84,6 +84,9 @@ public class StudyService {
     // 스터디 삭제
     @Transactional
     public void deleteStudy(Long loginMemberId, Long studyId){
+
+        activeMemberService.requireActive(loginMemberId);
+
         Study study = findStudy(studyId);
 
         // 삭제 처리 전에 작성자를 검증

@@ -20,6 +20,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ActiveMemberService activeMemberService;
 
     // 회원 가입
     @Transactional
@@ -53,7 +54,7 @@ public class MemberService {
     public Member editMember(Long memberId, MemberUpdateDto updateDto){
 
         // 수정할 회원 조회
-        Member findMember = findMember(memberId);
+        Member findMember = activeMemberService.requireActive(memberId);
 
         // 수정할 정보 중복 검사
         validateDuplicateMemberForEdit(findMember ,updateDto);
@@ -78,7 +79,7 @@ public class MemberService {
     // 회원 탈퇴 -> 중복 탈퇴 방지
     @Transactional
     public void withdrawMember(Long memberId) {
-        Member findMember = findMember(memberId);
+        Member findMember = activeMemberService.requireActive(memberId);
 
         findMember.withdraw();
     }

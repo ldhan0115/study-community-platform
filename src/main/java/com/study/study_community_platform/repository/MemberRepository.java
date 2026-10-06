@@ -18,4 +18,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByLoginId(String loginId);
     boolean existsByEmail(String email);
     boolean existsByNickname(String nickname);
+
+    // 로그인 당시의 정보가 아닌 현재 DB 상태를 확인
+    boolean existsByIdAndDeletedAtIsNull(Long memberId);
 }
