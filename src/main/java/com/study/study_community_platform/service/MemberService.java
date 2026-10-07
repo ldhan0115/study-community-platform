@@ -72,7 +72,7 @@ public class MemberService {
         // 실패하면 예외가 밖으로 전달되고 트랜잭션 롤백
         memberRepository.flush();
 
-        // Controller에서 수정된 영속 엔티티로 세션을 갱신하도록 반환
+        // 수정된 회원 정보 반환
         return findMember;
     }
 

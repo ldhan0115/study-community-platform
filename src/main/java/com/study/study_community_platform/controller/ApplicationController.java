@@ -20,7 +20,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
-    private final StudyService studyService;
 
     // 신청 내역 폼 이동
     @GetMapping
@@ -43,20 +42,15 @@ public class ApplicationController {
     // 신청 승인
     @PostMapping("/{applicationId}/approve")
     public String approve(@PathVariable Long applicationId,
-                          @Login LoginMemberSession loginMember,
-                          RedirectAttributes redirectAttributes){
+                          @Login LoginMemberSession loginMember){
 
         // 브라우저의 studyId를 사용하지 않고 applicationId가 가리키는 실제 신청의 스터디 ID 사용하는 것으로 수정
         Application application = applicationService.findApplication(applicationId);
         Long studyId = application.getStudy().getId();
 
-        try{
-            applicationService.approveApplication(loginMember.id(), applicationId);
-        }catch(IllegalStateException e){
-            log.warn("신청 승인 실패 memberId={}, applicationId={}", loginMember.id(), applicationId);
-
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
+        // 실제 작성자 검증과 상태 변경은 서비스에서 수행
+        // 도메인 예외는 GlobalExceptionHandler가 400/403/404로 처리
+        applicationService.approveApplication(loginMember.id(), applicationId);
 
         return "redirect:/studies/" + studyId + "/applicants";
     }
@@ -64,19 +58,12 @@ public class ApplicationController {
     // 신청 거절
     @PostMapping("/{applicationId}/reject")
     public String reject(@PathVariable Long applicationId,
-                         @Login LoginMemberSession loginMember,
-                         RedirectAttributes redirectAttributes){
+                         @Login LoginMemberSession loginMember){
 
         Application application = applicationService.findApplication(applicationId);
         Long studyId = application.getStudy().getId();
 
-        try{
-            applicationService.rejectApplication(loginMember.id(), applicationId);
-        }catch(IllegalStateException e){
-            log.warn("신청 거절 실패 memberId={}, applicationId={}", loginMember.id(), applicationId);
-
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        }
+        applicationService.rejectApplication(loginMember.id(), applicationId);
 
         return "redirect:/studies/" + studyId + "/applicants";
     }

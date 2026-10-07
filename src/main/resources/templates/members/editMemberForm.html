@@ -86,6 +86,11 @@
 
                     <form th:action th:object="${member}" method="post">
 
+                        <p class="text-muted small">
+                            저장 후 현재 브라우저에서 로그아웃됩니다.<br>
+                            변경한 정보로 다시 로그인해주세요.
+                        </p>
+
                         <!-- 특정 필드를 확정할 수 없는 DB 중복 충돌 표시. -->
                         <div th:if="${#fields.hasGlobalErrors()}"
                              class="alert alert-danger"
