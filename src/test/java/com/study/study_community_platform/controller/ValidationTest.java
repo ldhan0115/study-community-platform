@@ -166,11 +166,12 @@ public class ValidationTest {
 
         mockMvc.perform(asMember("/members/edit", values))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                .andExpect(redirectedUrl("/members/login?updated"));
 
         Member updated = memberRepository.findById(member.getId())
                 .orElseThrow();
 
+        assertThat(session.isInvalid()).isTrue();
         assertThat(updated.getId()).isEqualTo(member.getId());
         assertThat(passwordEncoder.matches(
                 values.get("password"),
@@ -209,7 +210,7 @@ public class ValidationTest {
 
             mockMvc.perform(asMember("/members/edit", editValues))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/"));
+                    .andExpect(redirectedUrl("/members/login?updated"));
 
             assertThat(memberRepository.count())
                     .isEqualTo(originalMemberCount + 1);
@@ -223,8 +224,8 @@ public class ValidationTest {
                     updated.getPassword()
             )).isTrue();
 
-            assertThat(session.getAttribute(SessionConst.LOGIN_MEMBER))
-                    .isEqualTo(LoginMemberSession.from(updated));
+            // 성공한 수정은 세션을 종료하므로 무효화 여부를 확인
+            assertThat(session.isInvalid()).isTrue();
 
         } else {
             String field = emailLength > 100 ? "email" : "password";

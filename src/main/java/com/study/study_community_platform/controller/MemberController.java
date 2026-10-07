@@ -3,7 +3,6 @@ package com.study.study_community_platform.controller;
 import com.study.study_community_platform.controller.web.member.EditMemberForm;
 import com.study.study_community_platform.controller.web.member.JoinMemberForm;
 import com.study.study_community_platform.controller.web.member.LoginMemberForm;
-import com.study.study_community_platform.controller.web.SessionConst;
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.session.LoginMemberSession;
 import com.study.study_community_platform.domain.Member;
@@ -100,7 +99,8 @@ public class MemberController {
     public String edit(@Validated @ModelAttribute("member") EditMemberForm form,
                        BindingResult bindingResult,
                        @Login LoginMemberSession loginMember,
-                       HttpServletRequest request){
+                       HttpServletRequest request,
+                       HttpServletResponse response){
 
         // 필드 검증 실패 시 수정 화면 다시 이동
         if(bindingResult.hasErrors()) {
@@ -115,10 +115,8 @@ public class MemberController {
                     form.getEmail(), form.getNickname()
                 );
 
-        Member updatedMember;
-
         try{
-            updatedMember = memberService.editMember(loginMember.id(), memberUpdateDto);
+            memberService.editMember(loginMember.id(), memberUpdateDto);
         }catch (DuplicateMemberException e){
             bindingResult.rejectValue(
                     e.getField(),
@@ -140,10 +138,16 @@ public class MemberController {
             throw new IllegalStateException("로그인 세션이 존재하지 않습니다.");
         }
 
+        // 서비스의 DB 수정이 성공한 뒤 현재 세션과 인증 정보를 함께 정리
+        // 세션 DTO만 변경하고 이전 Principal을 남겨두지 않음
+        new SecurityContextLogoutHandler().logout(
+                request,
+                response,
+                SecurityContextHolder.getContext().getAuthentication()
+        );
 
-        // 기존 비영속 객체를 세션에 저장한 것에서 DB에서 조회하여 수정한 영속 회원을 저장하여 id가 null이 되는 문제 해결
-        session.setAttribute(SessionConst.LOGIN_MEMBER, LoginMemberSession.from(updatedMember));
-        return "redirect:/";
+        // 재로그인 시 최신 정보로 Principal과 세션 DTO 생성
+        return "redirect:/members/login?updated";
 
     }
 

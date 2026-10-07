@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -34,16 +36,16 @@ public class MemberControllerTest {
     @Test
     void editKeepsLoginMemberIdAndUpdatedNickname() {
         // given
-        JoinMemberForm joinForm = new JoinMemberForm(
-                "member1",
-                "password123",
-                "member1@test.com",
-                "nickname1"
+        Long memberId = memberService.join(
+                new JoinMemberForm(
+                        "member1",
+                        "password123",
+                        "member1@test.com",
+                        "nickname1"
+                )
         );
 
-        Long memberId = memberService.join(joinForm);
         Member member = memberService.findMember(memberId);
-
         LoginMemberSession loginMember = LoginMemberSession.from(member);
 
         EditMemberForm editForm = new EditMemberForm();
@@ -54,19 +56,26 @@ public class MemberControllerTest {
 
         BindingResult bindingResult = new BeanPropertyBindingResult(editForm, "member");
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.getSession().setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockHttpSession session = new MockHttpSession();
+
+        request.setSession(session);
+        session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
 
         //when
-        String viewName = memberController.edit(editForm, bindingResult, loginMember, request);
+        String viewName = memberController.edit(editForm, bindingResult, loginMember, request, response);
 
-        HttpSession session = request.getSession(false);
-
-        LoginMemberSession updatedSessionMember = (LoginMemberSession) session.getAttribute(SessionConst.LOGIN_MEMBER);
+        Member updated = memberService.findMember(memberId);
 
         //then
-        assertThat(viewName).isEqualTo("redirect:/");
-        assertThat(updatedSessionMember.id()).isEqualTo(memberId);
-        assertThat(updatedSessionMember.nickname()).isEqualTo("newNickname");
+
+        // 회원을 새로 생성하지 않고 기존 회원의 정보를 수정
+        assertThat(updated.getId()).isEqualTo(memberId);
+        assertThat(updated.getNickname()).isEqualTo("newNickname");
+
+        // 수정 성공 후 현재 세션을 종료하고 재로그인 요청
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(viewName).isEqualTo("redirect:/members/login?updated");
 
     }
 
