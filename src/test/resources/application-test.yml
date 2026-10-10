@@ -7,11 +7,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: create-drop
 
-logging.level:
-  org.hibernate.SQL: debug
-  org.hibernate.orm.jdbc.bind: trace
+  flyway:
+    # MySQL 전용 SQL을 H2에서 실행하지 않음
+    enabled: false

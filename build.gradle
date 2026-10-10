@@ -25,7 +25,6 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-h2console'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -35,15 +34,25 @@ dependencies {
 	// 필터 체인, 인증, 인가, CSRF, 세션 보안 등의 기능 제공
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
-	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:2.0.0'
 	runtimeOnly 'org.springframework.boot:spring-boot-devtools'
 
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// MySQL 스키마 생성/변경은 Flyway가 담당
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+
+	// Flyway의 MySQL 지원 모듈
+	runtimeOnly 'org.flywaydb:flyway-mysql'
+
+	// MySQL JDBC 드라이버
+	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	// MockMvc에서 csrf(), authenticated(), unauthenticated() 등 사용
 	testImplementation 'org.springframework.security:spring-security-test'
+
+	// H2는 기본 테스트에서만 사용
+	testRuntimeOnly 'com.h2database:h2'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
@@ -53,6 +62,35 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		// 기본 테스트에서는 MySQL 전용 테스트 제외
+		excludeTags 'mysql'
+	}
 }
+
+tasks.register('mysqlTest', Test) {
+	group = 'verification'
+	description = 'Runs integration tests against the dedicated MySQL test database.'
+
+	dependsOn tasks.named('testClasses')
+
+	// 기존 테스트 소스 디렉터리를 사용하되 태그로 실행 대상을 분리
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+
+	javaLauncher = javaToolchains.launcherFor {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+
+	useJUnitPlatform {
+		includeTags 'mysql'
+	}
+
+	shouldRunAfter tasks.named('test')
+
+	// 외부 DB 상태는 파일 변경 여부만으로 판단할 수 없으므로 매번 실행
+	outputs.upToDateWhen { false }
+	outputs.cacheIf { false }
+}
+
 

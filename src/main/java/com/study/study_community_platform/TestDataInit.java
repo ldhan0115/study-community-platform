@@ -11,6 +11,7 @@ import com.study.study_community_platform.repository.MemberRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import com.study.study_community_platform.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
@@ -20,7 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
-@Profile("local")
+
+// local에서만 허용하고 운영·테스트 프로필과 함께 활성화된 경우도 제외
+@Profile("local & !prod & !test & !mysql-test")
+
+@ConditionalOnProperty(
+        name = "app.seed.enabled",
+        havingValue = "true"
+)
 public class TestDataInit {
 
     private final MemberRepository memberRepository;
@@ -34,8 +42,9 @@ public class TestDataInit {
     @Transactional
     public void init() {
 
-        // 애플리케이션 재실행 시 테스트 데이터가 중복 저장되는 것을 방지
-        if (memberRepository.existsByLoginId("test1")) {
+        // 최초의 빈 개발 DB에서만 샘플 데이터 생성
+        // 샘플 계정의 로그인 ID를 수정해도 재생성하지 않음
+        if (memberRepository.count() > 0) {
             return;
         }
 
