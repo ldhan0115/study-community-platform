@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.Length;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
@@ -37,8 +38,9 @@ public class Study {
     private String title;
 
     // 본문은 길어질 수 있으므로 LOB으로 저장
+    // Flyway의 MySQL LONGTEXT와 일치하도록 LOB 저장 길이를 명시
     @Lob
-    @Column(name = "study_content")
+    @Column(name = "study_content", length = Length.LONG32)
     private String content;
 
     // 진행 방식(온라인 / 오프라인)
