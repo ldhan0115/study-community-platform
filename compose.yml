@@ -1,0 +1,65 @@
+name: study-community
+
+services:
+  mysql:
+    image: mysql:8.4
+
+    # 호스트의 3307 포트를 개발용 DB에 연결
+    ports:
+      - "127.0.0.1:3307:3306"
+
+    environment:
+      MYSQL_DATABASE: study_platform
+      MYSQL_USER: study
+      MYSQL_PASSWORD: study_local_password
+      MYSQL_ROOT_PASSWORD: root_local_password
+      TZ: Asia/Seoul
+
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_as_cs
+
+    # 컨테이너를 다시 만들어도 DB 파일을 보존
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD-SHELL", 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1"']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  mysql-test:
+    image: mysql:8.4
+
+    # 테스트 DB가 필요할 때만 실행
+    profiles: ["test"]
+
+    ports:
+      - "127.0.0.1:3308:3306"
+
+    environment:
+      MYSQL_DATABASE: study_platform_test
+      MYSQL_USER: study_test
+      MYSQL_PASSWORD: study_test_password
+      MYSQL_ROOT_PASSWORD: root_test_password
+      TZ: Asia/Seoul
+
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_as_cs
+
+    volumes:
+      - mysql-test-data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD-SHELL", 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1"']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  mysql-data:
+  mysql-test-data:

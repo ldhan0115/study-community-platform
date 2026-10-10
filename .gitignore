@@ -40,5 +40,6 @@ out/
 *.mv.db
 *.trace.db
 
-application-local.yml
 .env
+.env.*
+!.env.example
