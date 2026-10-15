@@ -63,7 +63,7 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform {
-		// 기본 테스트에서는 MySQL 전용 테스트 제외
+		// 기본 H2 테스트에서는 MySQL 테스트 제외
 		excludeTags 'mysql'
 	}
 }
@@ -74,7 +74,6 @@ tasks.register('mysqlTest', Test) {
 
 	dependsOn tasks.named('testClasses')
 
-	// 기존 테스트 소스 디렉터리를 사용하되 태그로 실행 대상을 분리
 	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath
 
@@ -84,13 +83,54 @@ tasks.register('mysqlTest', Test) {
 
 	useJUnitPlatform {
 		includeTags 'mysql'
+
+		// 동시성 문제 재현 테스트는 별도 작업에서 실행
+		excludeTags 'mysql-concurrency'
 	}
+
+	maxParallelForks = 1
+	systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
 
 	shouldRunAfter tasks.named('test')
 
-	// 외부 DB 상태는 파일 변경 여부만으로 판단할 수 없으므로 매번 실행
+	// 외부 DB를 사용하므로 매번 실행
 	outputs.upToDateWhen { false }
 	outputs.cacheIf { false }
 }
 
+tasks.register('mysqlConcurrencyTest', Test) {
+	group = 'verification'
+	description = 'Reproduces application races against the dedicated MySQL test database.'
 
+	dependsOn tasks.named('testClasses')
+
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+
+	javaLauncher = javaToolchains.launcherFor {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+
+	useJUnitPlatform {
+		includeTags 'mysql-concurrency'
+	}
+
+	// 테스트 케이스는 순서대로 실행하고
+	// 각 케이스 내부에서만 두 작업을 병렬 실행
+	maxParallelForks = 1
+	systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
+
+	shouldRunAfter tasks.named('test')
+
+	// 같은 테스트 DB를 사용하는 작업끼리 실행 순서 고정
+	mustRunAfter tasks.named('mysqlTest')
+
+	testLogging {
+		events 'passed', 'failed', 'skipped'
+		showStandardStreams = true
+		exceptionFormat = 'full'
+	}
+
+	outputs.upToDateWhen { false }
+	outputs.cacheIf { false }
+}
