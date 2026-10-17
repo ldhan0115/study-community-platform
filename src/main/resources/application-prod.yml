@@ -5,6 +5,10 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+    hikari:
+      # 운영 환경에서도 행 잠금 대기 시간을 5초로 제한
+      connection-init-sql: "SET SESSION innodb_lock_wait_timeout = 5"
+
   jpa:
     hibernate:
       ddl-auto: validate

@@ -83,9 +83,6 @@ tasks.register('mysqlTest', Test) {
 
 	useJUnitPlatform {
 		includeTags 'mysql'
-
-		// 동시성 문제 재현 테스트는 별도 작업에서 실행
-		excludeTags 'mysql-concurrency'
 	}
 
 	maxParallelForks = 1
@@ -100,7 +97,7 @@ tasks.register('mysqlTest', Test) {
 
 tasks.register('mysqlConcurrencyTest', Test) {
 	group = 'verification'
-	description = 'Reproduces application races against the dedicated MySQL test database.'
+	description = 'Verifies concurrency rules against the dedicated MySQL test database.'
 
 	dependsOn tasks.named('testClasses')
 

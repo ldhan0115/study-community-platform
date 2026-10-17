@@ -2,15 +2,12 @@ package com.study.study_community_platform.controller;
 
 import com.study.study_community_platform.controller.web.argumentresolver.Login;
 import com.study.study_community_platform.controller.web.session.LoginMemberSession;
-import com.study.study_community_platform.domain.Application;
 import com.study.study_community_platform.service.ApplicationService;
-import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 @Slf4j
@@ -44,13 +41,11 @@ public class ApplicationController {
     public String approve(@PathVariable Long applicationId,
                           @Login LoginMemberSession loginMember){
 
-        // 브라우저의 studyId를 사용하지 않고 applicationId가 가리키는 실제 신청의 스터디 ID 사용하는 것으로 수정
-        Application application = applicationService.findApplication(applicationId);
-        Long studyId = application.getStudy().getId();
-
-        // 실제 작성자 검증과 상태 변경은 서비스에서 수행
-        // 도메인 예외는 GlobalExceptionHandler가 400/403/404로 처리
-        applicationService.approveApplication(loginMember.id(), applicationId);
+        // 신청 조회/잠금/권한 검증/변경을 서비스에서 함께 수행
+        Long studyId = applicationService.approveApplication(
+                loginMember.id(),
+                applicationId
+        );
 
         return "redirect:/studies/" + studyId + "/applicants";
     }
@@ -60,10 +55,10 @@ public class ApplicationController {
     public String reject(@PathVariable Long applicationId,
                          @Login LoginMemberSession loginMember){
 
-        Application application = applicationService.findApplication(applicationId);
-        Long studyId = application.getStudy().getId();
-
-        applicationService.rejectApplication(loginMember.id(), applicationId);
+        Long studyId = applicationService.rejectApplication(
+                loginMember.id(),
+                applicationId
+        );
 
         return "redirect:/studies/" + studyId + "/applicants";
     }

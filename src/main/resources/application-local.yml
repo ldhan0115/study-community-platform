@@ -5,6 +5,10 @@ spring:
     password: study_local_password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+    hikari:
+      # 새 MySQL 연결의 행 잠금 대기 시간을 5초로 설정
+      connection-init-sql: "SET SESSION innodb_lock_wait_timeout = 5"
+
   jpa:
     properties:
       hibernate:

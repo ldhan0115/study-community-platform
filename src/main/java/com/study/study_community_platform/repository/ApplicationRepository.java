@@ -40,4 +40,11 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             and s.deletedAt is null
             """)
     Optional<Application> findActiveById(@Param("applicationId") Long applicationId);
+
+    @Query("""
+            select a.study.id
+            from Application a
+            where a.id = :applicationId
+            """)
+    Optional<Long> findStudyIdByApplicationId(@Param("applicationId") Long applicationId);
 }

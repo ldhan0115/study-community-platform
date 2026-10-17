@@ -5,6 +5,10 @@ spring:
     password: study_test_password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+    hikari:
+      # MySQL 테스트 연결의 기본 행 잠금 대기 시간
+      connection-init-sql: "SET SESSION innodb_lock_wait_timeout = 5"
+
   jpa:
     hibernate:
       # 테스트에서도 실제 마이그레이션으로 만들어진 스키마를 검증

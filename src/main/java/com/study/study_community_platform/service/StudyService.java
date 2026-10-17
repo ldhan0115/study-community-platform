@@ -7,6 +7,7 @@ import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -63,31 +64,39 @@ public class StudyService {
     }
 
     // 스터디 수정
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void updateStudy(Long loginMemberId, Long studyId,  String title, String content,
                             StudyMethod method, String region, int capacity) {
 
         activeMemberService.requireActive(loginMemberId);
 
-        Study findStudy = findStudy(studyId);
+        // 신청 승인과 동일한 Study 행의 잠금을 사용
+        Study study = studyRepository.findActiveByIdForUpdate(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "존재하지 않는 스터디입니다."
+                ));
 
         // 엔티티를 변경하기 전에 작성자를 검증
-        validateStudyOwner(loginMemberId, findStudy);
+        validateStudyOwner(loginMemberId, study);
 
         // 승인 인원을 클라이언트 값이 아닌 DB에서 조회해서 사용
+        // 잠금을 획득한 뒤 승인 인원을 확인
         long approvedCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED);
 
         // 조회한 기존 엔티티의 값만 변경해서 JPA dirty checking으로 반영
-        findStudy.changeStudyInfo(title, content, method, region, capacity, approvedCount);
+        study.changeStudyInfo(title, content, method, region, capacity, approvedCount);
     }
 
     // 스터디 삭제
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void deleteStudy(Long loginMemberId, Long studyId){
 
         activeMemberService.requireActive(loginMemberId);
 
-        Study study = findStudy(studyId);
+        Study study = studyRepository.findActiveByIdForUpdate(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "존재하지 않는 스터디입니다."
+                ));
 
         // 삭제 처리 전에 작성자를 검증
         validateStudyOwner(loginMemberId, study);

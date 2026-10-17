@@ -14,8 +14,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -39,6 +41,7 @@ import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @Tag("mysql")
 @Tag("mysql-concurrency")
@@ -46,7 +49,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(properties = {
         "spring.datasource.hikari.maximum-pool-size=4",
         "spring.datasource.hikari.connection-timeout=10000",
-        "spring.datasource.hikari.connection-init-sql=SET SESSION innodb_lock_wait_timeout = 10"
+
+        // 잠금 실패 검증의 대기 시간을 줄이기 위한 테스트 전용 설정
+        "spring.datasource.hikari.connection-init-sql=SET SESSION innodb_lock_wait_timeout = 2"
 })
 // 클래스와 테스트 메서드에 @Transactional을 붙이지 않음
 class MySqlConcurrencyTest {
@@ -279,6 +284,321 @@ class MySqlConcurrencyTest {
         softly.assertAll();
     }
 
+    @Test
+    void capacityReductionAndApprovalKeepCapacityConsistent()
+            throws InterruptedException {
+
+        Long studyId = createStudy(2);
+
+        Long firstId = applicationService.applyToStudy(
+                firstMemberId, studyId, "첫 신청"
+        );
+
+        Long secondId = applicationService.applyToStudy(
+                secondMemberId, studyId, "두 번째 신청"
+        );
+
+        applicationService.approveApplication(ownerId, firstId);
+
+        // 승인 1명, 정원 2명 상태에서 승인과 정원 축소를 동시에 요청
+        List<Outcome> outcomes = race(
+                new Operation(
+                        "approve",
+                        () -> applicationService.approveApplication(
+                                ownerId, secondId
+                        )
+                ),
+                new Operation(
+                        "shrink",
+                        () -> studyService.updateStudy(
+                                ownerId,
+                                studyId,
+                                "정원 변경",
+                                "정원 변경 검증",
+                                StudyMethod.ONLINE,
+                                null,
+                                1
+                        )
+                )
+        );
+
+        Integer capacity = jdbc.queryForObject(
+                "select capacity from study where study_id = ?",
+                Integer.class,
+                studyId
+        );
+
+        Long approved = approvedCount(studyId);
+        String secondStatus = applicationStatus(secondId);
+
+        System.out.printf(
+                "capacity=%d, approved=%d, secondStatus=%s%n",
+                capacity,
+                approved,
+                secondStatus
+        );
+
+        SoftAssertions softly = new SoftAssertions();
+
+        assertOneSuccessfulCommit(softly, outcomes);
+
+        // 승인 우선이면 정원 2 / 승인 2
+        // 축소 우선이면 정원 1 / 승인 1
+        softly.assertThat(approved)
+                .isEqualTo(capacity.longValue());
+
+        softly.assertThat(approved)
+                .isIn(1L, 2L);
+
+        softly.assertThat(jdbc.queryForObject(
+                "select study_status from study where study_id = ?",
+                String.class,
+                studyId
+        )).isEqualTo("CLOSED");
+
+        List<Outcome> successful = outcomes.stream()
+                .filter(Outcome::succeeded)
+                .toList();
+
+        if (successful.size() == 1) {
+            boolean approvalWon =
+                    successful.get(0).operation().equals("approve");
+
+            softly.assertThat(approved)
+                    .isEqualTo(approvalWon ? 2L : 1L);
+
+            softly.assertThat(secondStatus)
+                    .isEqualTo(approvalWon ? "APPROVED" : "PENDING");
+        }
+
+        softly.assertAll();
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = ApplicationStatus.class,
+            names = {"REJECTED", "CANCELED"}
+    )
+    void reapplicationAfterFinalStateStillWorks(
+            ApplicationStatus previousStatus
+    ) {
+        Long studyId = createStudy(2);
+
+        Long oldId = applicationService.applyToStudy(
+                firstMemberId, studyId, "기존 신청"
+        );
+
+        if (previousStatus == ApplicationStatus.REJECTED) {
+            applicationService.rejectApplication(ownerId, oldId);
+        } else {
+            applicationService.cancelApplication(firstMemberId, oldId);
+        }
+
+        Long newId = applicationService.applyToStudy(
+                firstMemberId, studyId, "재신청"
+        );
+
+        // 이전 신청 이력은 보존하고 새로운 PENDING 신청 생성
+        assertThat(newId).isNotEqualTo(oldId);
+
+        assertThat(applicationStatus(oldId))
+                .isEqualTo(previousStatus.name());
+
+        assertThat(applicationStatus(newId))
+                .isEqualTo("PENDING");
+
+        assertThat(jdbc.queryForObject("""
+            select count(*) from application
+            where member_id = ? and study_id = ?
+              and application_status in ('PENDING', 'APPROVED')
+            """,
+                Long.class,
+                firstMemberId,
+                studyId
+        )).isEqualTo(1L);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "apply", "approve", "reject", "cancel", "update", "delete"
+    })
+    void lockedStudyRejectsMutationWithoutChangingData(
+            String operation
+    ) throws Exception {
+
+        Long studyId = createStudy(2);
+
+        Long applicationId = applicationService.applyToStudy(
+                firstMemberId, studyId, "기존 신청"
+        );
+
+        var studyBefore = jdbc.queryForMap(
+                "select * from study where study_id = ?",
+                studyId
+        );
+
+        var applicationsBefore = jdbc.queryForList(
+                """
+                select * from application
+                where study_id = ?
+                order by application_id
+                """,
+                studyId
+        );
+
+        Runnable action = switch (operation) {
+            case "apply" -> () -> applicationService.applyToStudy(
+                    secondMemberId, studyId, "새 신청"
+            );
+
+            case "approve" -> () -> applicationService.approveApplication(
+                    ownerId, applicationId
+            );
+
+            case "reject" -> () -> applicationService.rejectApplication(
+                    ownerId, applicationId
+            );
+
+            case "cancel" -> () -> applicationService.cancelApplication(
+                    firstMemberId, applicationId
+            );
+
+            case "update" -> () -> studyService.updateStudy(
+                    ownerId,
+                    studyId,
+                    "바뀌면 안 되는 제목",
+                    "바뀌면 안 되는 본문",
+                    StudyMethod.ONLINE,
+                    null,
+                    3
+            );
+
+            case "delete" -> () -> studyService.deleteStudy(
+                    ownerId, studyId
+            );
+
+            default -> throw new IllegalArgumentException(operation);
+        };
+
+        // 다른 트랜잭션이 실제로 잠금을 획득한 뒤 요청
+        // 잠금 시간 초과가 발생해야 하며 데이터는 보존되어야함
+        withStudyLock(
+                studyId,
+                () -> assertThatThrownBy(action::run)
+                        .isInstanceOf(PessimisticLockingFailureException.class)
+        );
+
+        assertThat(jdbc.queryForMap(
+                "select * from study where study_id = ?",
+                studyId
+        )).isEqualTo(studyBefore);
+
+        assertThat(jdbc.queryForList(
+                """
+                select * from application
+                where study_id = ?
+                order by application_id
+                """,
+                studyId
+        )).isEqualTo(applicationsBefore);
+    }
+
+    @Test
+    void differentStudyCanChangeWhileOneStudyIsLocked() throws Exception {
+        Long lockedStudyId = createStudy(2);
+        Long otherStudyId = createStudy(2);
+
+        // 첫 번째 스터디의 잠금이 유지되는 동안
+        // 다른 스터디에는 정상적으로 신청할 수 있어야함
+        withStudyLock(lockedStudyId, () -> {
+            Long applicationId = applicationService.applyToStudy(
+                    firstMemberId,
+                    otherStudyId,
+                    "다른 스터디 신청"
+            );
+
+            assertThat(applicationStatus(applicationId))
+                    .isEqualTo("PENDING");
+        });
+    }
+
+    private String applicationStatus(Long applicationId) {
+        return jdbc.queryForObject(
+                """
+                select application_status
+                from application
+                where application_id = ?
+                """,
+                String.class,
+                applicationId
+        );
+    }
+
+    private void withStudyLock(
+            Long studyId,
+            Runnable action
+    ) throws Exception {
+
+        CountDownLatch locked = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+
+        Future<?> holder = executor.submit(() -> {
+            // 이 트랜잭션은 잠금을 보유하는 테스트용 작업
+            // 검증 대상 서비스 호출을 감싸는 용도 x
+            TransactionTemplate transaction =
+                    new TransactionTemplate(transactionManager);
+
+            transaction.setPropagationBehavior(
+                    TransactionDefinition.PROPAGATION_REQUIRES_NEW
+            );
+
+            transaction.executeWithoutResult(status -> {
+                jdbc.queryForObject(
+                        """
+                        select study_id
+                        from study
+                        where study_id = ?
+                        for update
+                        """,
+                        Long.class,
+                        studyId
+                );
+
+                // 실제 잠금을 얻은 뒤 검증 작업의 시작을 허용
+                locked.countDown();
+
+                try {
+                    if (!release.await(20, SECONDS)) {
+                        throw new IllegalStateException(
+                                "잠금 해제 신호 대기 시간 초과"
+                        );
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+
+                    throw new IllegalStateException(
+                            "잠금 보유 작업 중단",
+                            e
+                    );
+                }
+            });
+        });
+
+        try {
+            assertThat(locked.await(10, SECONDS))
+                    .as("테스트용 Study 잠금 획득")
+                    .isTrue();
+
+            action.run();
+
+        } finally {
+            release.countDown();
+
+            // 잠금 보유 작업의 예외와 커밋 완료도 확인
+            holder.get(30, SECONDS);
+        }
+    }
+
     private List<Outcome> race(
             Operation first,
             Operation second
@@ -288,7 +608,6 @@ class MySqlConcurrencyTest {
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
-        CyclicBarrier beforeCommit = new CyclicBarrier(2);
 
         List<Future<Void>> futures = new ArrayList<>();
 
@@ -302,28 +621,11 @@ class MySqlConcurrencyTest {
                     );
                 }
 
-                // 작업마다 독립 트랜잭션과 영속성 컨텍스트를 사용
-                TransactionTemplate transaction =
-                        new TransactionTemplate(transactionManager);
+                // 바깥 TransactionTemplate 없이 실제 서비스 프록시 호출
+                // 서비스의 @Transactional과 READ_COMMITTED 적용
+                operation.action().run();
 
-                transaction.setPropagationBehavior(
-                        TransactionDefinition.PROPAGATION_REQUIRES_NEW
-                );
-
-                transaction.setTimeout(25);
-
-                transaction.executeWithoutResult(status -> {
-                    operation.action().run();
-
-
-                    // 둘 다 서비스 검증을 통과할 때까지 커밋 미룸
-                    // 이후 이 대기점과 외부 TransactionTemplate을
-                    // 제거하고 서비스 자체의 트랜잭션 경계를 검증
-                    // 시작 latch는 유지
-                    awaitBeforeCommit(beforeCommit);
-                });
-
-                // executeWithoutResult가 반환되어야 실제 커밋 성공
+                // 서비스 프록시가 정상 반환하면 커밋도 완료
                 return null;
             }));
         }
@@ -347,7 +649,7 @@ class MySqlConcurrencyTest {
                 outcomes.add(new Outcome(name, null));
 
             } catch (ExecutionException e) {
-                // 하나가 실패해도 나머지 Future의 결과 확인
+                // 하나가 실패하더라도 나머지 결과까지 확인
                 outcomes.add(new Outcome(name, e.getCause()));
 
             } catch (TimeoutException e) {
@@ -378,35 +680,14 @@ class MySqlConcurrencyTest {
                 .as("최종 DB 조회 전에 모든 작업이 종료되어야 함")
                 .isTrue();
 
-        // Future 대기 시간이 끝났다는 사실만으로 DB 롤백을 단정할 수 없음
         assertThat(outcomes)
-                .as("Future 타임아웃은 재현 성공이 아님")
+                .as("Future 타임아웃을 정상적인 요청 거부로 취급하지 않음")
                 .noneMatch(
                         outcome ->
                                 outcome.failure() instanceof TimeoutException
                 );
 
         return outcomes;
-    }
-
-    private static void awaitBeforeCommit(CyclicBarrier barrier) {
-        try {
-            barrier.await(10, SECONDS);
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-
-            throw new IllegalStateException(
-                    "커밋 전 대기 중 인터럽트",
-                    e
-            );
-
-        } catch (BrokenBarrierException | TimeoutException e) {
-            throw new IllegalStateException(
-                    "두 작업이 커밋 전 대기 지점에 도달하지 못함",
-                    e
-            );
-        }
     }
 
     private static void assertOneSuccessfulCommit(
