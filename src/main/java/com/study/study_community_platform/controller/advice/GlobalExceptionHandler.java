@@ -4,6 +4,7 @@ import com.study.study_community_platform.exception.BusinessRuleException;
 import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,5 +53,22 @@ public class GlobalExceptionHandler {
         modelAndView.addObject("message", message);
 
         return modelAndView;
+    }
+
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ModelAndView handleLockConflict(
+            PessimisticLockingFailureException exception
+    ){
+        log.warn(
+                "동시 변경 요청의 잠금 충돌: {}",
+                exception.getClass().getSimpleName()
+        );
+
+        // 서비스에서 예외를 삼키지 않고 트랜잭션을 롤백한 뒤 안내
+        return createErrorView(
+                HttpStatus.CONFLICT,
+                "다른 요청이 처리 중입니다.",
+                "잠시 후 현재 상태를 확인하고 다시 시도해주세요"
+        );
     }
 }

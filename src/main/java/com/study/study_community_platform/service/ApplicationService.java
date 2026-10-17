@@ -8,6 +8,7 @@ import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -21,17 +22,18 @@ public class ApplicationService {
     private final StudyRepository studyRepository;
     private final ActiveMemberService activeMemberService;
 
-    @Transactional
-    public Long applyToStudy(Long memberId, Long studyId, String message){
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Long applyToStudy(Long memberId,
+                             Long studyId,
+                             String message){
 
-        // 신청을 하는 회원 존재 여부 확인
+        // 신청을 하는 회원을 존재 여부 학인 후 반환
         Member member = activeMemberService.requireActive(memberId);
 
-        // 신청 대상 스터디 존재 여부 확인
-        Study study = studyRepository.findByIdAndDeletedAtIsNull(studyId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
+        // 중복 신청 검사 전에 공통 Study 잠금 획득
+        Study study = lockStudy(studyId);
 
-        // 화면에서 신청 버튼을 숨겼더라도 직접 요청할 수 있으므로 서버에서 검사 -> 방장이 자신의 스터디에 신청
+        // 화면에서 신청 버튼을 숨겼더라도 직접 요청할 수 있으므로 서버에서 검사 -> 방장이 자신의 스터디에 신청하는 경우
         if(study.getMember().getId().equals(memberId)){
             throw new BusinessRuleException("스터디 방장은 자신의 스터디에 신청할 수 없습니다.");
         }
@@ -42,6 +44,7 @@ public class ApplicationService {
             throw new BusinessRuleException("모집이 마감된 스터디입니다.");
         }
 
+        // 먼저 처리된 요청의 커밋 결과를 잠금 획득 후 확인한
         if(isApplied(memberId, studyId)){
             throw new BusinessRuleException("신청 대기 중이거나 이미 승인된 스터디입니다.");
         }
@@ -60,7 +63,8 @@ public class ApplicationService {
         // 취소(CANCELED)나 거절(REJECTED)된 건 무시하고
         // PENDING(보류) 이나 APPROVED(승인) 상태인 신청건이 있는지 확인하는 것으로 수정
         return applicationRepository.findByMemberIdAndStudyId(memberId, studyId).stream()
-                .anyMatch(app -> app.getStatus() == ApplicationStatus.PENDING || app.getStatus() == ApplicationStatus.APPROVED);
+                .anyMatch(app ->
+                        app.getStatus() == ApplicationStatus.PENDING || app.getStatus() == ApplicationStatus.APPROVED);
     }
 
     // 신청 단건 조회
@@ -77,6 +81,13 @@ public class ApplicationService {
     // 특정 회원의 신청 목록 조회 -> 삭제된 스터디의 신청은 제외
     public List<Application> findApplicationsByMember(Long memberId){
         return applicationRepository.findActiveStudyApplicationsByMemberId(memberId);
+    }
+
+    private Study lockStudy(Long studyId){
+        return studyRepository.findActiveByIdForUpdate(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "존재하지 않는 스터디입니다."
+                ));
     }
 
     // 현재 로그인한 회원이 신청 대상 스터디의 작성자인지 검증
@@ -99,13 +110,14 @@ public class ApplicationService {
     }
 
     // 스터디 신청 승인
-    @Transactional
-    public void approveApplication(Long loginMemberId, Long applicationId){
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Long approveApplication(Long loginMemberId,
+                                   Long applicationId){
 
         activeMemberService.requireActive(loginMemberId);
 
-        // 신청 엔티티 및 해당하는 스터디 엔티티 조회
-        Application application = findApplication(applicationId);
+        // 신청에 해당하는 스터디 잠금 획득 후 신청 엔티티 조회
+        Application application = findApplicationForUpdate(applicationId);
 
         // 정원 검사나 상태 변경 전에 실제 신청 대상 스터디의 작성자인지 검증
         validateStudyOwner(loginMemberId, application);
@@ -116,7 +128,11 @@ public class ApplicationService {
         Study study = application.getStudy();
 
         // 현재 승인된 인원수를 조회해서 정원 초과 방어
-        long approvedCount = applicationRepository.countByStudyIdAndStatus(study.getId(), ApplicationStatus.APPROVED);
+        // Study 잠금을 보유한 상태에서 최신 승인 인원을 조회
+        long approvedCount = applicationRepository.countByStudyIdAndStatus(
+                study.getId(),
+                ApplicationStatus.APPROVED);
+
         if(approvedCount >= study.getCapacity()){
             throw new BusinessRuleException("스터디 모집 정원이 꽉 차서 더 이상 승인할 수 없습니다.");
         }
@@ -130,29 +146,49 @@ public class ApplicationService {
 
         // approvedCount는 이번 승인 전의 인원수 -> 지금 승인한 1명을 더한 값으로 모집 상태 갱신
         study.updateRecruitmentStatus(approvedCount + 1);
+
+        // 컨트롤러에서 선조회하지 않도록 실제 스터디 ID 반환
+        return study.getId();
+    }
+
+    private Application findApplicationForUpdate(Long applicationId){
+        Long studyId = applicationRepository.findStudyIdByApplicationId(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "존재하지 않는 신청입니다."
+                ));
+
+        // Study 잠금 → 신청 조회 → 검증 → 변경 순서
+        lockStudy(studyId);
+
+        return findApplication(applicationId);
     }
 
     // 스터디 신청 거절
-    @Transactional
-    public void rejectApplication(Long loginMemberId, Long applicationId){
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Long rejectApplication(Long loginMemberId,
+                                  Long applicationId){
 
         activeMemberService.requireActive(loginMemberId);
 
-        Application application = findApplication(applicationId);
+        Application application = findApplicationForUpdate(applicationId);
 
         // Application과 연결된 실제 Study의 작성자만 해당 신청 거절 가능
         validateStudyOwner(loginMemberId, application);
 
+        // 도메인 메서드에서 PENDING 여부를 검증 후 거절
         application.reject();
+
+        return application.getStudy().getId();
     }
 
     // 스터디 신청 취소
-    @Transactional
-    public void cancelApplication(Long loginMemberId, Long applicationId) {
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void cancelApplication(Long loginMemberId,
+                                  Long applicationId) {
 
         activeMemberService.requireActive(loginMemberId);
 
-        Application application = findApplication(applicationId);
+        Application application = findApplicationForUpdate(applicationId);
 
         // 신청을 작성한 회원 본인인지 확인한 후 취소
         validateApplicant(loginMemberId, application);
