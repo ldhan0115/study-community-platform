@@ -5,6 +5,7 @@ import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -58,6 +59,18 @@ class GlobalExceptionHandlerTest {
                 .andExpect(model().attribute("status", 400));
     }
 
+    @Test
+    void lockConflictReturns409() throws Exception {
+        mockMvc.perform(get("/test/errors/lock"))
+                .andExpect(status().isConflict())
+                .andExpect(view().name("error/error"))
+                .andExpect(model().attribute("status", 409))
+                .andExpect(model().attribute(
+                        "message",
+                        "잠시 후 현재 상태를 확인하고 다시 시도해주세요"
+                ));
+    }
+
     @Controller
     static class ExceptionTestController{
 
@@ -74,6 +87,10 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/test/errors/business")
         public String business(){
             throw new BusinessRuleException("처리할 수 없는 요청입니다.");
+        }
+
+        @GetMapping("/test/errors/lock")
+        public String lockConflict() { throw new CannotAcquireLockException("테스트용 잠금 충돌");
         }
     }
 
