@@ -62,9 +62,12 @@ public class ApplicationService {
     public boolean isApplied(Long memberId, Long studyId) {
         // 취소(CANCELED)나 거절(REJECTED)된 건 무시하고
         // PENDING(보류) 이나 APPROVED(승인) 상태인 신청건이 있는지 확인하는 것으로 수정
-        return applicationRepository.findByMemberIdAndStudyId(memberId, studyId).stream()
-                .anyMatch(app ->
-                        app.getStatus() == ApplicationStatus.PENDING || app.getStatus() == ApplicationStatus.APPROVED);
+        return applicationRepository.existsByMemberIdAndStudyIdAndStatusIn(memberId,
+                studyId,
+                List.of(
+                        ApplicationStatus.PENDING,
+                        ApplicationStatus.APPROVED)
+        );
     }
 
     // 신청 단건 조회
