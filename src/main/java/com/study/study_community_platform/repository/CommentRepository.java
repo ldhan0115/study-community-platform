@@ -11,7 +11,16 @@ import java.util.Optional;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByMemberId(Long memberId);
-    List<Comment> findByStudyId(Long studyId);
+
+    @Query("""
+            select c
+            from Comment c
+            join fetch c.member
+            where c.study.id = :studyId
+             and c.deletedAt is null
+            order by c.createdAt asc, c.id asc
+            """)
+    List<Comment> findByStudyId(@Param("studyId") Long studyId);
 
     @Query("""
             select c from Comment c

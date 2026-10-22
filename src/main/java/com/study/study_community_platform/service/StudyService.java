@@ -36,14 +36,14 @@ public class StudyService {
         return study.getId();
     }
 
-    // 전체 스터디 조회
+    // 전체 스터디 조회 -> 조회 시 스터디장도 같이 조회해서 별도의 조회를 줄임
     public List<Study> findStudies(){
-        return studyRepository.findAll();
+        return studyRepository.findAllWithMember();
     }
 
-    // 스터디 단건 조회
+    // 스터디 단건 조회 -> 위와 동일
     public Study findStudy(Long studyId){
-        return studyRepository.findByIdAndDeletedAtIsNull(studyId)
+        return studyRepository.findDetailById(studyId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 스터디입니다."));
 
     }

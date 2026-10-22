@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface StudyRepository extends JpaRepository<Study, Long> {
@@ -23,4 +24,23 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
             and s.deletedAt is null
             """)
     Optional<Study> findActiveByIdForUpdate(@Param("studyId") Long studyId);
+
+    // 목록에서 작성자 닉네임을 사용할 때 추가 SQL이 발생하지 않도록 함께 조회
+    @Query("""
+            select s
+            from Study s
+            join fetch s.member
+            where s.deletedAt is null
+            order by s.createdAt desc, s.id desc
+            """)
+    List<Study> findAllWithMember();
+
+    @Query("""
+            select s
+            from Study s
+            join fetch s.member
+            where s.id = :studyId
+             and s.deletedAt is null
+            """)
+    Optional<Study> findDetailById(@Param("studyId") Long studyId);
 }
