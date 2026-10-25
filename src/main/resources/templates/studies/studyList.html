@@ -94,10 +94,27 @@
         </div>
     </div>
 
-    <div th:if="${studies.empty}" class="text-center py-5 my-5">
+    <p class="small text-muted mb-4"
+       th:text="|전체 ${studyPage.totalElements}개 · 페이지당 ${studyPage.size}개|"></p>
+
+    <!-- 등록된 스터디가 하나도 없는 경우 -->
+    <div th:if="${studyPage.totalElements == 0}"
+         class="text-center py-5 my-5">
         <i class="bi bi-folder-x display-1 text-muted mb-3"></i>
         <h4 class="fw-bold text-secondary">등록된 스터디가 없습니다.</h4>
         <p class="text-muted">첫 번째 스터디의 주인공이 되어보세요!</p>
+    </div>
+
+    <!-- 데이터는 있지만 요청한 페이지가 범위를 벗어난 경우 -->
+    <div th:if="${studyPage.totalElements > 0 and studyPage.empty}"
+         class="text-center py-5 my-5">
+        <h4 class="fw-bold text-secondary">요청한 페이지에 스터디가 없습니다.</h4>
+
+        <a id="study-page-first"
+           class="btn btn-outline-primary mt-3"
+           th:href="@{/studies(page=0, size=${studyPage.size})}">
+            첫 페이지로 이동
+        </a>
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5" th:unless="${studies.empty}">
@@ -136,6 +153,55 @@
         </div>
 
     </div>
+
+    <nav th:if="${!studyPage.empty}" aria-label="스터디 목록 페이지">
+        <ul class="pagination justify-content-center mb-0">
+
+            <li class="page-item"
+                th:classappend="${!studyPage.hasPrevious()} ? 'disabled'">
+
+                <!-- 이동할 페이지가 없으면 링크 대신 span을 표시 -->
+                <a th:if="${studyPage.hasPrevious()}"
+                   id="study-page-prev"
+                   class="page-link"
+                   rel="prev"
+                   th:href="@{/studies(page=${studyPage.number - 1}, size=${studyPage.size})}">
+                    이전
+                </a>
+
+                <span th:unless="${studyPage.hasPrevious()}"
+                      class="page-link"
+                      aria-disabled="true">
+                이전
+            </span>
+            </li>
+
+            <li class="page-item disabled">
+                <!-- URL은 0부터, 화면의 페이지 번호는 1부터 -->
+                <span class="page-link"
+                      th:text="|${studyPage.number + 1} / ${studyPage.totalPages}|"></span>
+            </li>
+
+            <li class="page-item"
+                th:classappend="${!studyPage.hasNext()} ? 'disabled'">
+
+                <a th:if="${studyPage.hasNext()}"
+                   id="study-page-next"
+                   class="page-link"
+                   rel="next"
+                   th:href="@{/studies(page=${studyPage.number + 1}, size=${studyPage.size})}">
+                    다음
+                </a>
+
+                <span th:unless="${studyPage.hasNext()}"
+                      class="page-link"
+                      aria-disabled="true">
+                다음
+            </span>
+            </li>
+
+        </ul>
+    </nav>
 
 </main>
 
