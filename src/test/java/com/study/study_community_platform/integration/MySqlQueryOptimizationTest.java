@@ -30,7 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -87,17 +89,17 @@ class MySqlQueryOptimizationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {1, 5})
-    void studyListLoadsAuthorsInOneQuery(int size) {
+    @ValueSource(ints = {1, 5, 10})
+    void studyPageLoadsOnlyRequestedRowsAndAuthors(int size) {
         List<StudyRow> expected = new ArrayList<>();
 
-        for (int i = 0; i < size; i++) {
-            // 작성자가 같으면 1차 캐시 때문에 문제가 작게 보일 수 있음
+        for (int i = 0; i < 25; i++) {
+            // 서로 다른 작성자를 사용해 1차 캐시가 추가 조회를 가리지 않도록 함
             Member author = member();
             Study study = study(author, "스터디 " + i);
 
-            if (i == 0) {
-                // 탈퇴한 작성자의 기존 글도 조회되어야함
+            if (i == 24) {
+                // 첫 페이지에 포함되는 탈퇴 작성자의 글도 조회되어야 함
                 author.withdraw();
             }
 
@@ -111,22 +113,43 @@ class MySqlQueryOptimizationTest {
         Study deleted = study(member(), "삭제된 스터디");
         deleted.withdraw();
 
+        entityManager.flush();
+
+        // 생성 시각을 맞추고 ID 내림차순 결과를 검증
+        entityManager.createQuery(
+                        "update Study s set s.createdAt = :time"
+                )
+                .setParameter(
+                        "time",
+                        LocalDateTime.of(2026, 1, 1, 0, 0)
+                )
+                .executeUpdate();
+
+        Collections.reverse(expected);
+
         var measured = measure(
-                "study-list",
+                "study-page",
                 size,
-                () -> studyService.findStudies().stream()
+                () -> studyService.findStudies(0, size)
                         .map(s -> new StudyRow(
                                 s.getId(),
                                 s.getTitle(),
                                 s.getMember().getNickname()
                         ))
-                        .toList()
         );
 
-        assertThat(measured.value())
-                .containsExactlyInAnyOrderElementsOf(expected);
+        assertThat(measured.value().getContent())
+                .containsExactlyElementsOf(expected.subList(0, size));
 
-        assertOneStatement(measured);
+        assertThat(measured.value().getTotalElements()).isEqualTo(25L);
+        assertThat(measured.value().getSize()).isEqualTo(size);
+
+        // 첫 페이지가 항상 꽉 차는 데이터: 목록 조회 1회 + 전체 개수 조회 1회
+        assertThat(measured.statements()).isEqualTo(2L);
+
+        // 요청한 스터디와 각각의 작성자만 로딩
+        // 전체 25개를 가져와 메모리에서 자르는 구현이면 실패
+        assertThat(measured.entityLoads()).isEqualTo(size * 2L);
     }
 
     @Test

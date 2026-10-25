@@ -98,7 +98,7 @@ class StudyServiceTest {
         Study findStudy2 = studyService.findStudy(studyId2);
 
         //when
-        List<Study> studies = studyService.findStudies();
+        List<Study> studies = studyService.findStudies(0, 10).getContent();
 
         //then
         assertThat(studies.size()).isEqualTo(2);
@@ -191,7 +191,7 @@ class StudyServiceTest {
 
         //when
         studyService.deleteStudy(member.getId(), studyId1);
-        List<Study> studies = studyService.findStudies();
+        List<Study> studies = studyService.findStudies(0, 10).getContent();
 
         //then
         assertThat(studies.size()).isEqualTo(1);

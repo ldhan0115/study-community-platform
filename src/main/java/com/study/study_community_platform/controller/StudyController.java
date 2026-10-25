@@ -12,6 +12,7 @@ import com.study.study_community_platform.service.CommentService;
 import com.study.study_community_platform.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -65,10 +66,19 @@ public class StudyController {
 
     // 스터디 전체 목록 조회
     @GetMapping
-    public String list(Model model){
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model
+    ){
 
-        List<Study> studies = studyService.findStudies();
-        model.addAttribute("studies", studies);
+        Page<Study> studyPage = studyService.findStudies(page, size);
+
+        // 기존 카드 반복문은 studies를 그대로 사용
+        model.addAttribute("studies", studyPage.getContent());
+
+        // 전체 개수, 현재 페이지, 이전·다음 여부를 화면에 전달
+        model.addAttribute("studyPage", studyPage);
         return "studies/studyList";
     }
 

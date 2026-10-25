@@ -1,11 +1,15 @@
 package com.study.study_community_platform.service;
 
 import com.study.study_community_platform.domain.*;
+import com.study.study_community_platform.exception.BusinessRuleException;
 import com.study.study_community_platform.exception.ForbiddenOperationException;
 import com.study.study_community_platform.exception.ResourceNotFoundException;
 import com.study.study_community_platform.repository.ApplicationRepository;
 import com.study.study_community_platform.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,15 @@ public class StudyService {
     private final StudyRepository studyRepository;
     private final ApplicationRepository applicationRepository;
     private final ActiveMemberService activeMemberService;
+
+    public static final int DEFAULT_PAGE_SIZE = 10;
+    public static final int MAX_PAGE_SIZE = 50;
+
+    // 생성 시각이 같아도 ID로 순서를 확정
+    private static final Sort LIST_SORT = Sort.by(
+            Sort.Order.desc("createdAt"),
+            Sort.Order.desc("id")
+    );
 
     // 스터디 등록
     @Transactional
@@ -37,8 +50,21 @@ public class StudyService {
     }
 
     // 전체 스터디 조회 -> 조회 시 스터디장도 같이 조회해서 별도의 조회를 줄임
-    public List<Study> findStudies(){
-        return studyRepository.findAllWithMember();
+    public Page<Study> findStudies(int page, int size){
+        // 음수 페이지는 첫 페이지로 처리
+        int safePage = Math.max(page, 0);
+
+        // 0 이하는 기본값, 최대 조회 개수는 50개로 제한
+        int safeSize = size <= 0
+                ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
+
+        if((long)safePage * safeSize > Integer.MAX_VALUE){
+            throw new BusinessRuleException("요청한 페이지 범위가 너무 큽니다.");
+        }
+
+        return studyRepository.findAllWithMember(
+                PageRequest.of(safePage, safeSize, LIST_SORT)
+        );
     }
 
     // 스터디 단건 조회 -> 위와 동일
