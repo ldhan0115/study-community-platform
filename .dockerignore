@@ -1,0 +1,14 @@
+.git
+.github
+.gradle
+build
+out
+.idea
+.vscode
+docs
+src/test
+*.log
+*.mv.db
+*.trace.db
+.env
+.env.*

@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 같은 브랜치에 새 커밋이 올라오면 이전 실행을 취소
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  h2-test:
+    name: H2 tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Run H2 tests
+        run: bash ./gradlew --no-daemon clean test
+
+      # 실패한 테스트의 HTML/XML 보고서도 보존
+      - name: Upload H2 reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: h2-test-reports
+          path: |
+            build/reports/tests/test/
+            build/test-results/test/
+          retention-days: 7
+          if-no-files-found: warn
+
+  mysql-test:
+    name: MySQL tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      # 로컬과 동일한 MySQL 버전·문자 집합·포트 설정 사용
+      - name: Start MySQL test database
+        run: docker compose --profile test up -d --wait --wait-timeout 180 mysql-test
+
+      # mysql 태그에 동시성 테스트도 포함되어 있음
+      - name: Run MySQL tests
+        run: bash ./gradlew --no-daemon mysqlTest
+
+      - name: Upload MySQL reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mysql-test-reports
+          path: |
+            build/reports/tests/mysqlTest/
+            build/test-results/mysqlTest/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Show MySQL logs on failure
+        if: failure()
+        run: docker compose --profile test logs --no-color mysql-test
+
+      - name: Stop MySQL test database
+        if: always()
+        run: docker compose --profile test down
+
+  docker-smoke:
+    name: Docker startup
+
+    # 두 테스트 작업이 성공한 뒤 Docker 실행 검증
+    needs: [h2-test, mysql-test]
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # JAR 빌드도 Dockerfile 안의 Java 21 환경에서 수행
+      - name: Build application image
+        run: docker compose --profile app build app
+
+      - name: Start application and database
+        run: docker compose --profile app up -d --wait --wait-timeout 240 app
+
+      # 로그인 리다이렉트가 아닌 정상 목록 응답인지 상태 코드까지 확인
+      - name: Verify public study page
+        run: |
+          status_code=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 10 'http://127.0.0.1:8081/studies?page=0&size=1')
+          printf 'HTTP status: %s\n' "$status_code"
+          test "$status_code" = "200"
+
+      - name: Collect container logs
+        if: always()
+        run: docker compose --profile app logs --no-color > docker-startup.log 2>&1
+
+      - name: Upload container logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: docker-startup-logs
+          path: docker-startup.log
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Stop application and database
+        if: always()
+        run: docker compose --profile app down
