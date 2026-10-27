@@ -8,6 +8,11 @@ group = 'web'
 version = '0.0.1-SNAPSHOT'
 description = 'Study Community Platform'
 
+// Dockerfile에서 실행할 Spring Boot JAR 이름을 고정
+tasks.named('bootJar') {
+	archiveFileName = 'app.jar'
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
