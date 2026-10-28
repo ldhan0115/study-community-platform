@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav th:fragment="mainNav"
+     class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom"
+     aria-label="주 메뉴">
+
+    <div class="container py-1">
+        <a class="navbar-brand fw-bold text-primary fs-4"
+           th:href="@{/}">
+            StudyPlatform
+        </a>
+
+        <!-- 작은 화면에서 접힌 메뉴를 열고 닫는 버튼 -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNav"
+                aria-controls="mainNav"
+                aria-expanded="false"
+                aria-label="메뉴 열기 또는 닫기">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/studies}">
+                        스터디 탐색
+                    </a>
+                </li>
+
+                <li class="nav-item"
+                    th:if="${session.loginMember != null}">
+                    <a class="nav-link" th:href="@{/applications}">
+                        내 신청내역
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex flex-wrap align-items-center gap-3 mt-3 mt-lg-0">
+
+                <!-- 비로그인 상태 -->
+                <th:block th:if="${session.loginMember == null}">
+                    <a class="text-decoration-none text-secondary small"
+                       th:href="@{/members/login}">
+                        로그인
+                    </a>
+
+                    <a class="btn btn-primary px-4 rounded-pill"
+                       th:href="@{/members/join}">
+                        시작하기
+                    </a>
+                </th:block>
+
+                <!-- 로그인 상태 -->
+                <div th:if="${session.loginMember != null}"
+                     class="dropdown">
+
+                    <!-- 클릭·터치·키보드로 열 수 있는 회원 메뉴 -->
+                    <button id="accountMenu"
+                            type="button"
+                            class="btn btn-light dropdown-toggle fw-semibold"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            th:text="|${session.loginMember.nickname}님|">
+                        사용자님
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm"
+                        aria-labelledby="accountMenu">
+
+                        <li>
+                            <a class="dropdown-item py-2"
+                               th:href="@{/members/edit}">
+                                정보 수정
+                            </a>
+                        </li>
+
+                        <li>
+                            <!-- th:action을 사용하는 POST 폼으로 CSRF 처리를 유지 -->
+                            <form th:action="@{/members/logout}"
+                                  method="post"
+                                  class="m-0">
+                                <button type="submit"
+                                        class="dropdown-item py-2">
+                                    로그아웃
+                                </button>
+                            </form>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <form th:action="@{/members/withdraw}"
+                                  method="post"
+                                  class="m-0"
+                                  onsubmit="return confirm('정말 탈퇴하시겠습니까?');">
+                                <button type="submit"
+                                        class="dropdown-item py-2 text-danger">
+                                    회원 탈퇴
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>

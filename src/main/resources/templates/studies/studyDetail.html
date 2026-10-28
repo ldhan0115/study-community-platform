@@ -33,45 +33,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
-    <div class="container py-1">
-        <a class="navbar-brand fw-bold text-primary fs-4" th:href="@{/}">StudyPlatform</a>
-        <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                <li class="nav-item"><a class="nav-link text-primary fw-bold" th:href="@{/studies}">스터디 탐색</a></li>
-                <li class="nav-item" th:if="${session.loginMember != null}">
-                    <a class="nav-link" th:href="@{/applications}">내 신청내역</a>
-                </li>
-            </ul>
-
-            <div class="d-flex align-items-center gap-3">
-                <th:block th:if="${session.loginMember == null}">
-                    <a class="text-decoration-none text-secondary small" th:href="@{/members/login}">로그인</a>
-                    <a class="btn btn-primary px-4 rounded-pill" th:href="@{/members/join}">시작하기</a>
-                </th:block>
-                <th:block th:if="${session.loginMember != null}">
-                    <div class="dropdown dropdown-hover d-flex align-items-center">
-                        <span class="fw-bold small text-dark pe-2 py-2" style="cursor: pointer;" th:text="|${session.loginMember.nickname}님|">사용자님</span>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                            <li><a class="dropdown-item py-2" th:href="@{/members/edit}">정보 수정</a></li>
-                            <li>
-                                <form th:action="@{/members/logout}" method="post" class="m-0">
-                                    <button type="submit" class="dropdown-item py-2">로그아웃</button>
-                                </form>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form th:action="@{/members/withdraw}" method="post" class="m-0" onsubmit="return confirm('정말 탈퇴하시겠습니까?');">
-                                    <button type="submit" class="dropdown-item py-2 text-danger fw-bold">회원 탈퇴</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                </th:block>
-            </div>
-        </div>
-    </div>
-</nav>
+<nav th:replace="~{fragments/navigation :: mainNav}"></nav>
 
 <main class="container">
 
@@ -122,7 +84,11 @@
                         </div>
                         <div class="col-4">
                             <p class="text-muted mb-1 small fw-bold">진행 지역</p>
-                            <h5 class="fw-bold mb-0 text-dark" th:text="${study.region}">서울 강남구</h5>
+                            <!-- 온라인은 안내 문구, 오프라인은 실제 지역 표시 -->
+                            <h5 class="fw-bold mb-0 text-dark"
+                                th:text="${study.method.name() == 'ONLINE' ? '지역 제한 없음' : study.region}">
+                                지역
+                            </h5>
                         </div>
                     </div>
                 </div>
@@ -135,12 +101,14 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center border-top pt-4">
+                <!-- 작은 화면에서는 세로 배치, 중간 크기 이상에서는 가로 배치 -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 border-top pt-4">
                     <a th:href="@{/studies}" class="btn btn-outline-secondary px-4 fw-medium">
                         <i class="bi bi-list me-1"></i>목록으로
                     </a>
 
-                    <div class="d-flex gap-2">
+                    <!-- 버튼을 한 줄에 담기 어려우면 다음 줄로 배치 -->
+                    <div class="d-flex flex-wrap gap-2">
                         <th:block th:if="${session.loginMember != null and session.loginMember.id == study.member.id}">
                             <a th:href="@{|/studies/${study.id}/applicants|}" class="btn btn-primary px-4 fw-medium shadow-sm">신청자 관리</a>
                             <a th:href="@{|/studies/${study.id}/edit|}" class="btn btn-light border px-4 fw-medium text-dark">수정</a>
