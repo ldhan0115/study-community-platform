@@ -124,15 +124,21 @@ private String content;
 
 ## 4. 인덱스
 
-기본 키와 UNIQUE 제약 외에 V1 DDL에서 명시한 일반 인덱스는 다음과 같다.
+기본 키와 UNIQUE 제약 외에 Flyway V1·V2에서 명시한 일반 인덱스는 다음과 같다.
 
-| 인덱스명 | 테이블 | 컬럼 순서 | 설계 의도 |
-| --- | --- | --- | --- |
-| idx_study_title | study | study_title | 제목 조건 조회 |
-| idx_application_status_created_at | application | application_status, created_at | 상태·생성일 조건 조회 |
-| idx_comment_study | comment | study_id | 스터디별 댓글 조회 |
+| 버전 | 인덱스명 | 테이블 | 컬럼 순서 | 설계 의도 |
+| --- | --- | --- | --- | --- |
+| V1 | idx_study_title | study | study_title | 제목 조건 조회 |
+| V1 | idx_application_status_created_at | application | application_status, created_at | 상태·생성일 조건 조회 |
+| V1 | idx_comment_study | comment | study_id | 스터디별 댓글 조회 |
+| V2 | idx_application_study_status | application | study_id, application_status | 스터디별 승인 인원 집계 |
+| V2 | idx_application_member_study_status | application | member_id, study_id, application_status | 회원·스터디별 유효 신청 확인 |
 
-제목 검색·상태와 기간별 검색 기능 및 각 쿼리에서의 인덱스 효과를 모두 구현·검증했다는 의미는 아니다. 실제 SQL과 실행 계획을 확인해 필요한 인덱스를 보완할 예정이다.
+인덱스의 존재와 실제 실행 계획에서의 선택은 구분한다.
+
+Day9의 두 로그는 동일한 실행 계획을 보였으며, 두 로그 모두 V2 인덱스를 후보로 포함했다. 이 기록만으로 인덱스 추가 전후의 성능 개선율을 계산하지 않는다.
+
+측정 조건과 결과는 [조회 측정 문서](./troubleshooting/query-measurement.md)에 정리했다.
 
 ## 5. DB 제약과 애플리케이션 검증
 
@@ -151,7 +157,9 @@ private String content;
 
 현재 `study_content`, `message`, `content`는 DB에서 NULL을 허용한다. 애플리케이션의 필수 입력 정책을 DB NOT NULL 제약으로도 강화하려면 기존 데이터를 점검하고 후속 마이그레이션을 추가해야 한다.
 
-승인 인원은 `APPROVED` 신청 수로 계산하며 별도 집계 컬럼을 두지 않는다. 정원 초과, 유효 상태 기준 중복 신청, 상태 변경 충돌에 대한 동시성 제어는 아직 추가 과제다.
+승인 인원은 `APPROVED` 신청 수로 계산하며 별도 집계 컬럼을 두지 않는다.
+
+같은 스터디의 신청·승인·거절·취소·정원 변경·삭제는 공통 Study 행 잠금을 사용한다. 변경 트랜잭션에 READ_COMMITTED를 적용하고 잠금 획득 후 상태와 승인 인원을 검사한다.
 
 ## 6. 논리적 삭제
 
@@ -180,11 +188,12 @@ private String content;
 - MySQL 마이그레이션 경로: `classpath:db/migration/mysql`
 - 초기 마이그레이션: `V1__initial_schema.sql`
 - `flyway_schema_history`는 Flyway가 적용 이력과 체크섬을 관리하는 테이블이다.
-- 적용 완료된 파일은 수정하지 않고 변경 사항을 V2 이후의 마이그레이션으로 추가한다.
+- 현재 V1은 초기 스키마, V2는 신청 조회용 복합 인덱스를 정의한다.
+- 적용 완료된 파일은 유지하고 이후 변경은 V3 등 새로운 버전의 마이그레이션으로 추가한다.
 - `spring.sql.init.mode=never`로 별도의 SQL 초기화를 비활성화한다.
 - Flyway의 `clean-disabled=true`, `baseline-on-migrate=false`를 사용한다.
 - V1은 빈 MySQL DB를 대상으로 하며 기존 H2 데이터의 자동 이전은 포함하지 않는다.
-- `database/ddl.sql`은 실제 마이그레이션 경로를 안내하는 파일이다.
+- 실행 DDL은 `src/main/resources/db/migration/mysql`에서 관리한다.
 
 `TestDataInit`은 `local` 프로필에서 `app.seed.enabled=true`이고 회원 테이블이 비어 있을 때만 샘플을 생성한다. 샘플 데이터 생성과 Flyway의 테이블 생성은 별도로 관리한다.
 
@@ -197,3 +206,4 @@ Hibernate의 매핑 검증과 실제 INSERT 시 DB 제약 검증을 함께 사�
 - [논리적 모델과 관계 ERD](./03-logical-model.md)
 - [Flyway V1 DDL](../src/main/resources/db/migration/mysql/V1__initial_schema.sql)
 - [실행 및 테스트 방법](../README.md)
+- - [Flyway V2 인덱스](../src/main/resources/db/migration/mysql/V2__add_application_lookup_indexes.sql)

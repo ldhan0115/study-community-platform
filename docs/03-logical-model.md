@@ -130,7 +130,11 @@
 
 DB에서 NULL을 허용하는 `study_content`, `message`, `content`도 애플리케이션에서는 필수다. 현재 DDL에 이 세 컬럼의 NOT NULL 제약이나 정원 CHECK 제약은 없다.
 
-중복 신청과 정원 규칙의 동시 요청 보장은 향후 동시성 제어로 보강한다.
+중복 신청·신청 상태·정원 규칙을 함께 보호하기 위해 같은 스터디의 변경 서비스는 공통 Study 행 잠금을 사용한다.
+
+변경 트랜잭션은 READ_COMMITTED를 적용하며 잠금 획득 후 현재 신청 상태와 승인 인원을 검사한다.
+
+구현과 검증 범위는 [동시성 제어 문서](./troubleshooting/application-concurrency.md)에 정리했다.
 
 ## 7. 관계 ERD
 
